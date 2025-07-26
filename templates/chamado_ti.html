@@ -5,16 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chamados de TI - Baggio Portal</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <!-- Biblioteca Chart.js para os gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="dashboard-container">
-        <!-- Sidebar -->
+        <!-- INÍCIO DA BARRA LATERAL (SIDEBAR ) CORRIGIDA -->
         <aside class="sidebar">
             <div class="sidebar-header">
                 <img src="{{ url_for('static', filename='baggio-logo.png') }}" alt="Logo Baggio" class="sidebar-logo">
                 <h3>BAGGIO PORTAL</h3>
             </div>
             <nav class="sidebar-nav">
+                <a href="{{ url_for('admin_portal') }}" class="nav-item">PAINEL</a>
                 <a href="{{ url_for('pagina_menu', pagina='usuarios') }}" class="nav-item">USUÁRIOS</a>
                 <a href="{{ url_for('pagina_menu', pagina='imoveis') }}" class="nav-item">IMÓVEIS</a>
                 <a href="{{ url_for('mapa') }}" class="nav-item">MAPA</a>
@@ -24,7 +27,7 @@
                 <a href="{{ url_for('pagina_menu', pagina='financeiro') }}" class="nav-item">FINANCEIRO</a>
                 <a href="{{ url_for('pagina_menu', pagina='imobiliaria') }}" class="nav-item">IMOBILIÁRIA</a>
                 <a href="{{ url_for('pagina_menu', pagina='crm') }}" class="nav-item">CRM</a>
-                <a href="{{ url_for('chamado_ti') }}" class="nav-item nav-item-ti active">CHAMADO TI</a>
+                <a href="{{ url_for('chamado_ti') }}" class="nav-item nav-item-ti active">CHAMADO TI</a> <!-- Marca como ativo -->
             </nav>
             <div class="sidebar-footer">
                 <div class="user-info">
@@ -33,6 +36,7 @@
                 </div>
             </div>
         </aside>
+        <!-- FIM DA BARRA LATERAL (SIDEBAR) -->
 
         <!-- Conteúdo Principal -->
         <main class="main-content">
@@ -47,6 +51,42 @@
                 {% endfor %}
               {% endif %}
             {% endwith %}
+
+            <!-- Secção de Indicadores -->
+            <section class="indicators-grid">
+                <div class="indicator-card">
+                    <h3>Total de Chamados</h3>
+                    <p class="indicator-value">{{ total_tickets }}</p>
+                </div>
+                <div class="indicator-card">
+                    <h3>Abertos</h3>
+                    <p class="indicator-value">{{ status_counts.get('Aberto', 0) }}</p>
+                </div>
+                <div class="indicator-card">
+                    <h3>Em Andamento</h3>
+                    <p class="indicator-value">{{ status_counts.get('Em Andamento', 0) }}</p>
+                </div>
+                <div class="indicator-card">
+                    <h3>Concluídos</h3>
+                    <p class="indicator-value">{{ status_counts.get('Concluído', 0) }}</p>
+                </div>
+            </section>
+
+            <!-- Secção de Gráficos -->
+            <section class="charts-grid">
+                <div class="chart-card">
+                    <h3>Status dos Chamados</h3>
+                    <canvas id="statusChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3>Maiores Solicitantes</h3>
+                    <canvas id="creatorsChart"></canvas>
+                </div>
+                <div class="chart-card chart-full-width">
+                    <h3>Volume Mensal de Chamados</h3>
+                    <canvas id="monthlyChart"></canvas>
+                </div>
+            </section>
 
             <!-- Formulário para criar novo chamado -->
             <div class="form-container">
@@ -73,7 +113,6 @@
                                 <span>{{ ticket.data_criacao }}</span>
                             </div>
                             
-                            <!-- Notas do Ticket -->
                             {% if ticket.notas %}
                             <div class="ticket-notes">
                                 <h5>Histórico:</h5>
@@ -85,7 +124,6 @@
                             </div>
                             {% endif %}
 
-                            <!-- Ações para o Admin de TI -->
                             {% if user_role == 'ti_admin' %}
                             <div class="admin-actions">
                                 <form action="{{ url_for('mover_chamado') }}" method="post" class="move-form">
@@ -114,5 +152,21 @@
             </div>
         </main>
     </div>
+
+    <!-- O script para os gráficos permanece no final -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const statusLabels = {{ chart_status_labels|tojson }};
+            const statusData = {{ chart_status_data|tojson }};
+            const monthlyLabels = {{ chart_monthly_labels|tojson }};
+            const monthlyData = {{ chart_monthly_data|tojson }};
+            const creatorsLabels = {{ chart_creators_labels|tojson }};
+            const creatorsData = {{ chart_creators_data|tojson }};
+            const chartColors = ['#f9a826', '#1e3a5f', '#28a745', '#8892b0', '#ff6f00'];
+            new Chart(document.getElementById('statusChart'), { type: 'pie', data: { labels: statusLabels, datasets: [{ data: statusData, backgroundColor: chartColors, borderColor: '#0e203e' }] }, options: { responsive: true, maintainAspectRatio: false } });
+            new Chart(document.getElementById('creatorsChart'), { type: 'doughnut', data: { labels: creatorsLabels, datasets: [{ data: creatorsData, backgroundColor: chartColors, borderColor: '#0e203e' }] }, options: { responsive: true, maintainAspectRatio: false } });
+            new Chart(document.getElementById('monthlyChart'), { type: 'bar', data: { labels: monthlyLabels, datasets: [{ label: 'Nº de Chamados', data: monthlyData, backgroundColor: '#1e3a5f', borderColor: '#f9a826', borderWidth: 1 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } } });
+        });
+    </script>
 </body>
 </html>
