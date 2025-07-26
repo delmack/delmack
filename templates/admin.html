@@ -3,17 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bem-vindo ao Portal</title>
+    <title>Painel de Administração - Baggio Portal</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script> <!-- Para ícones -->
 </head>
 <body>
-    <div class="container">
-        <div class="admin-panel">
-            <h1>Seja bem vindo, {{ username }}!</h1>
-            <p>Esta é a sua área de administração de acessos.</p>
-            <p>A partir daqui, pode gerir as permissões e utilizadores do sistema.</p>
-            <a href="{{ url_for('logout') }}" class="btn btn-logout">Sair</a>
-        </div>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="{{ url_for('static', filename='baggio-logo.png' ) }}" alt="Logo Baggio" class="sidebar-logo">
+                <h3>BAGGIO PORTAL</h3>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('pagina_menu', pagina='usuarios') }}" class="nav-item">USUÁRIOS</a>
+                <a href="{{ url_for('pagina_menu', pagina='imoveis') }}" class="nav-item">IMÓVEIS</a>
+                <a href="{{ url_for('pagina_menu', pagina='mapa') }}" class="nav-item">MAPA</a>
+                <a href="{{ url_for('pagina_menu', pagina='contratos') }}" class="nav-item">CONTRATOS</a>
+                <a href="{{ url_for('pagina_menu', pagina='manutencao') }}" class="nav-item">MANUTENÇÃO</a>
+                <a href="{{ url_for('pagina_menu', pagina='pessoas') }}" class="nav-item">PESSOAS</a>
+                <a href="{{ url_for('pagina_menu', pagina='financeiro') }}" class="nav-item">FINANCEIRO</a>
+                <a href="{{ url_for('pagina_menu', pagina='imobiliaria') }}" class="nav-item">IMOBILIÁRIA</a>
+                <a href="{{ url_for('pagina_menu', pagina='crm') }}" class="nav-item">CRM</a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <span class="username">Utilizador: {{ username }}</span>
+                    <a href="{{ url_for('logout') }}" class="logout-link">Sair</a>
+                </div>
+            </div>
+        </aside>
+        <main class="main-content">
+            <header class="main-header">
+                <h1>Painel de Indicadores</h1>
+            </header>
+            <section class="content-area">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                  {% if messages %}
+                    {% for category, message in messages %}
+                      <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                  {% endif %}
+                {% endwith %}
+                
+                <h2>Seja bem-vindo!</h2>
+                <p>Selecione uma opção no menu à esquerda para começar a visualizar os indicadores.</p>
+                <!-- Aqui é onde você irá carregar os dados das suas APIs no futuro -->
+            </section>
+        </main>
     </div>
 </body>
 </html>
