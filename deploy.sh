@@ -1,36 +1,24 @@
-#!/bin/bash
+#!/bin/sh
 
-# Diretório de destino no App Service
-DEPLOYMENT_TARGET=/home/site/wwwroot
+# Este script é executado a partir da raiz do código fonte no Kudu.
+# O Oryx executa o build num diretório de origem e move para um de destino.
 
-# Caminho para o ambiente virtual
-VENV_PATH=$DEPLOYMENT_TARGET/antenv
+# Variáveis de ambiente fornecidas pelo Kudu/Oryx
+# DEPLOYMENT_SOURCE é onde o nosso código está (ex: /tmp/8ddcc5...)
+# DEPLOYMENT_TARGET é para onde o resultado final deve ir (ex: /home/site/wwwroot)
 
-echo "A criar ambiente virtual em $VENV_PATH..."
-python3.13 -m venv $VENV_PATH
+echo "--- Início do Script de Deploy Personalizado ---"
 
-echo "A ativar ambiente e a instalar dependências..."
-# Ativar o ambiente virtual
-source $VENV_PATH/bin/activate
+# 1. Executar o build do Oryx para criar o ambiente virtual e instalar as dependências
+# Isto irá criar o ambiente 'antenv' dentro de $DEPLOYMENT_TARGET
+echo "A executar o build do Oryx..."
+oryx build $DEPLOYMENT_SOURCE -o $DEPLOYMENT_TARGET --platform python --platform-version 3.13
 
-# Atualizar o pip e instalar pacotes
-pip install --upgrade pip
-pip install -r requirements.txt
+# Verificar se o build do Oryx foi bem sucedido
+if [ $? -ne 0 ]; then
+  echo "O build do Oryx falhou."
+  exit 1
+fi
 
-# Desativar para limpar o ambiente do script de deploy
-deactivate
-
-echo "A criar o script de arranque final (run.sh)..."
-# Criar o script que o Azure irá realmente executar
-cat <<EOF > $DEPLOYMENT_TARGET/run.sh
-#!/bin/bash
-echo "A ativar o ambiente virtual para o arranque..."
-source $VENV_PATH/bin/activate
-echo "A iniciar o Gunicorn..."
-gunicorn --bind=0.0.0.0:8000 --timeout 600 app:app
-EOF
-
-# Tornar o script de arranque executável
-chmod +x $DEPLOYMENT_TARGET/run.sh
-
-echo "Script de deploy concluído."
+echo "Build do Oryx concluído."
+echo "--- Fim do Script de Deploy Personalizado ---"
