@@ -3,20 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de Administração - Baggio Portal</title>
+    <title>Mapa de Imóveis - Baggio Portal</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <!-- CSS do Leaflet (biblioteca do mapa) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+    <!-- JS do Leaflet -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
 </head>
 <body>
     <div class="dashboard-container">
+        <!-- A mesma sidebar do admin.html -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <img src="{{ url_for('static', filename='baggio-logo.png') }}" alt="Logo Baggio" class="sidebar-logo">
+                <img src="{{ url_for('static', filename='baggio-logo.png' ) }}" alt="Logo Baggio" class="sidebar-logo">
                 <h3>BAGGIO PORTAL</h3>
             </div>
             <nav class="sidebar-nav">
                 <a href="{{ url_for('pagina_menu', pagina='usuarios') }}" class="nav-item">USUÁRIOS</a>
                 <a href="{{ url_for('pagina_menu', pagina='imoveis') }}" class="nav-item">IMÓVEIS</a>
-                <a href="{{ url_for('mapa') }}" class="nav-item">MAPA</a>
+                <a href="{{ url_for('mapa') }}" class="nav-item active">MAPA</a> <!-- Marca como ativo -->
                 <a href="{{ url_for('pagina_menu', pagina='contratos') }}" class="nav-item">CONTRATOS</a>
                 <a href="{{ url_for('pagina_menu', pagina='manutencao') }}" class="nav-item">MANUTENÇÃO</a>
                 <a href="{{ url_for('pagina_menu', pagina='pessoas') }}" class="nav-item">PESSOAS</a>
@@ -34,21 +43,28 @@
         </aside>
         <main class="main-content">
             <header class="main-header">
-                <h1>Painel de Indicadores</h1>
+                <h1>Mapa de Imóveis</h1>
             </header>
             <section class="content-area">
-                {% with messages = get_flashed_messages(with_categories=true) %}
-                  {% if messages %}
-                    {% for category, message in messages %}
-                      <div class="alert alert-{{ category }}">{{ message }}</div>
-                    {% endfor %}
-                  {% endif %}
-                {% endwith %}
-                
-                <h2>Seja bem-vindo!</h2>
-                <p>Selecione uma opção no menu à esquerda para começar a visualizar os indicadores.</p>
+                <div id="map"></div>
             </section>
         </main>
     </div>
+
+    <script>
+        // Inicializa o mapa e define a sua visualização para as coordenadas de Curitiba com um zoom
+        var map = L.map('map').setView({{ default_coords|tojson }}, 13);
+
+        // Adiciona a camada de "tiles" do OpenStreetMap ao mapa
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        } ).addTo(map);
+
+        // Exemplo de como você adicionará um marcador no futuro
+        // var marker = L.marker([-25.4284, -49.2733]).addTo(map);
+        // marker.bindPopup("<b>Olá, Curitiba!</b>  
+Aqui fica um imóvel.").openPopup();
+    </script>
 </body>
 </html>

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chamados de TI - Baggio Portal</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="{{ url_for('static', filename='baggio-logo.png') }}" alt="Logo Baggio" class="sidebar-logo">
+                <h3>BAGGIO PORTAL</h3>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('pagina_menu', pagina='usuarios') }}" class="nav-item">USUÁRIOS</a>
+                <a href="{{ url_for('pagina_menu', pagina='imoveis') }}" class="nav-item">IMÓVEIS</a>
+                <a href="{{ url_for('mapa') }}" class="nav-item">MAPA</a>
+                <a href="{{ url_for('pagina_menu', pagina='contratos') }}" class="nav-item">CONTRATOS</a>
+                <a href="{{ url_for('pagina_menu', pagina='manutencao') }}" class="nav-item">MANUTENÇÃO</a>
+                <a href="{{ url_for('pagina_menu', pagina='pessoas') }}" class="nav-item">PESSOAS</a>
+                <a href="{{ url_for('pagina_menu', pagina='financeiro') }}" class="nav-item">FINANCEIRO</a>
+                <a href="{{ url_for('pagina_menu', pagina='imobiliaria') }}" class="nav-item">IMOBILIÁRIA</a>
+                <a href="{{ url_for('pagina_menu', pagina='crm') }}" class="nav-item">CRM</a>
+                <a href="{{ url_for('chamado_ti') }}" class="nav-item nav-item-ti active">CHAMADO TI</a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <span class="username">Utilizador: {{ session.get('username') }}</span>
+                    <a href="{{ url_for('logout') }}" class="logout-link">Sair</a>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Conteúdo Principal -->
+        <main class="main-content">
+            <header class="main-header">
+                <h1>Central de Suporte de TI</h1>
+            </header>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                {% for category, message in messages %}
+                  <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+
+            <!-- Formulário para criar novo chamado -->
+            <div class="form-container">
+                <h3>Criar Novo Chamado</h3>
+                <form action="{{ url_for('novo_chamado') }}" method="post">
+                    <input type="text" name="titulo" placeholder="Título do Chamado" required class="form-input">
+                    <textarea name="descricao" placeholder="Descreva o problema detalhadamente..." required class="form-textarea"></textarea>
+                    <button type="submit" class="btn-submit-ti">ABRIR CHAMADO</button>
+                </form>
+            </div>
+
+            <!-- Quadro Kanban -->
+            <div class="kanban-board">
+                {% for status, tickets in board.items() %}
+                <div class="kanban-column">
+                    <h3 class="column-title">{{ status }}</h3>
+                    <div class="tickets-container">
+                        {% for ticket in tickets %}
+                        <div class="ticket-card">
+                            <h4>#{{ ticket.id }} - {{ ticket.titulo }}</h4>
+                            <p class="ticket-desc">{{ ticket.descricao }}</p>
+                            <div class="ticket-footer">
+                                <span>Criado por: {{ ticket.criado_por }}</span>
+                                <span>{{ ticket.data_criacao }}</span>
+                            </div>
+                            
+                            <!-- Notas do Ticket -->
+                            {% if ticket.notas %}
+                            <div class="ticket-notes">
+                                <h5>Histórico:</h5>
+                                <ul>
+                                    {% for nota in ticket.notas %}
+                                    <li>{{ nota }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            {% endif %}
+
+                            <!-- Ações para o Admin de TI -->
+                            {% if user_role == 'ti_admin' %}
+                            <div class="admin-actions">
+                                <form action="{{ url_for('mover_chamado') }}" method="post" class="move-form">
+                                    <input type="hidden" name="ticket_id" value="{{ ticket.id }}">
+                                    <select name="novo_status" onchange="this.form.submit()">
+                                        <option value="" disabled selected>Mover para...</option>
+                                        {% if status != 'Aberto' %}<option value="Aberto">Aberto</option>{% endif %}
+                                        {% if status != 'Em Andamento' %}<option value="Em Andamento">Em Andamento</option>{% endif %}
+                                        {% if status != 'Concluído' %}<option value="Concluído">Concluído</option>{% endif %}
+                                    </select>
+                                </form>
+                                <form action="{{ url_for('add_nota_chamado') }}" method="post" class="note-form">
+                                    <input type="hidden" name="ticket_id" value="{{ ticket.id }}">
+                                    <input type="text" name="nota" placeholder="Adicionar nota..." required>
+                                    <button type="submit">Salvar</button>
+                                </form>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% else %}
+                        <p class="no-tickets">Nenhum chamado nesta coluna.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </main>
+    </div>
+</body>
+</html>
