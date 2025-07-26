@@ -6,7 +6,7 @@
 # Instruções de Uso:
 # 1. Salve este código como 'app.py'.
 # 2. Instale as dependências necessárias: 
-#    pip install -r requirements.txt
+#    pip install Flask Flask-SQLAlchemy Flask-Login Werkzeug requests
 # 3. Execute o script no terminal: python app.py
 # 4. O primeiro usuário a se cadastrar será o Super Admin.
 # -----------------------------------------------------------------------------
@@ -22,22 +22,18 @@ from jinja2 import BaseLoader, TemplateNotFound
 from io import StringIO
 from collections import Counter
 import statistics
-from dotenv import load_dotenv
-
-# Carrega variáveis de ambiente
-load_dotenv()
 
 # --- CONFIGURAÇÃO DA APLICAÇÃO ---
 app = Flask(__name__, static_folder='static')
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'uma-chave-secreta-muito-forte-e-dificil-de-adivinhar')
+app.config['SECRET_KEY'] = 'uma-chave-secreta-muito-forte-e-dificil-de-adivinhar'
 
-# Configuração do Banco de Dados
+# Configuração do Banco de Dados SQLite
 basedir = os.path.abspath(os.path.dirname(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///' + os.path.join(basedir, 'portal.db'))
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'portal.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Configuração da API Properfy
-app.config['PROPERFY_API_TOKEN'] = os.getenv('PROPERFY_API_TOKEN', '05ad4b19-08e7-4534-a594-51e3665fe0f5')
+app.config['PROPERFY_API_TOKEN'] = '05ad4b19-08e7-4534-a594-51e3665fe0f5'
 app.config['PROPERFY_API_URL'] = 'https://sandbox.properfy.com.br/api/property/property'
 
 db = SQLAlchemy(app)
@@ -397,7 +393,269 @@ html_templates = {
 </div>
 {% endblock %}
     """,
-    # ... (mantenha os outros templates originais, mas adicione as classes de estilo conforme o layout.html)
+    "admin/admin_layout.html": """
+{% extends "layout.html" %}
+{% block content %}
+<div class="row">
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-header">
+                <h5>Menu de Administração</h5>
+            </div>
+            <div class="list-group list-group-flush">
+                <a href="{{ url_for('admin_dashboard') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'admin_dashboard' %}active{% endif %}">
+                    <i class="bi bi-speedometer2 me-2"></i> Visão Geral
+                </a>
+                <a href="{{ url_for('admin_users') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'admin_users' %}active{% endif %}">
+                    <i class="bi bi-people me-2"></i> Gerenciar Usuários
+                </a>
+                <a href="{{ url_for('admin_companies') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'admin_companies' %}active{% endif %}">
+                    <i class="bi bi-building me-2"></i> Gerenciar Empresas
+                </a>
+                <a href="{{ url_for('admin_profiles') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'admin_profiles' %}active{% endif %}">
+                    <i class="bi bi-person-badge me-2"></i> Gerenciar Perfis
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-9">
+        {% block admin_content %}{% endblock %}
+    </div>
+</div>
+{% endblock %}
+    """,
+    "admin/admin_dashboard.html": """
+{% extends "admin/admin_layout.html" %}
+{% block title %}Admin Dashboard - Baggio Imóveis{% endblock %}
+{% block admin_content %}
+<h3 class="mb-4">Visão Geral da Plataforma</h3>
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card text-center border-primary">
+            <div class="card-body">
+                <i class="bi bi-people display-6 text-primary mb-3"></i>
+                <h5 class="card-title">Usuários Totais</h5>
+                <p class="card-text fs-2">{{ stats.total_users }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card text-center border-success">
+            <div class="card-body">
+                <i class="bi bi-building display-6 text-success mb-3"></i>
+                <h5 class="card-title">Empresas Cadastradas</h5>
+                <p class="card-text fs-2">{{ stats.total_companies }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card text-center border-warning">
+            <div class="card-body">
+                <i class="bi bi-person-badge display-6 text-warning mb-3"></i>
+                <h5 class="card-title">Perfis de Acesso</h5>
+                <p class="card-text fs-2">{{ stats.total_profiles }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+    """,
+    "admin/admin_users.html": """
+{% extends "admin/admin_layout.html" %}
+{% block title %}Gerenciar Usuários - Baggio Imóveis{% endblock %}
+{% block admin_content %}
+<h3 class="mb-4">Gerenciar Usuários</h3>
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Lista de Usuários</h5>
+        <a href="#" class="btn btn-sm btn-accent" data-bs-toggle="modal" data-bs-target="#addUserModal">
+            <i class="bi bi-plus-circle"></i> Adicionar Usuário
+        </a>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Usuário</th>
+                        <th>Email</th>
+                        <th>Empresa</th>
+                        <th>Perfil</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <form method="POST" action="{{ url_for('admin_update_user', user_id=user.id) }}">
+                            <td>{{ user.id }}</td>
+                            <td>
+                                {{ user.username }} 
+                                {% if user.is_super_admin %}
+                                <span class="badge bg-primary">Admin</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ user.email }}</td>
+                            <td>
+                                <select name="company_id" class="form-select form-select-sm">
+                                    <option value="">Nenhuma</option>
+                                    {% for company in companies %}
+                                    <option value="{{ company.id }}" {% if user.company_id == company.id %}selected{% endif %}>{{ company.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td>
+                                <select name="profile_id" class="form-select form-select-sm">
+                                    <option value="">Nenhum</option>
+                                    {% for profile in profiles %}
+                                    <option value="{{ profile.id }}" {% if user.profile_id == profile.id %}selected{% endif %}>{{ profile.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td class="text-nowrap">
+                                <button type="submit" class="btn btn-sm btn-success">
+                                    <i class="bi bi-check-circle"></i> Salvar
+                                </button>
+                                {% if not user.is_super_admin %}
+                                <form method="POST" action="{{ url_for('admin_delete_user', user_id=user.id) }}" onsubmit="return confirm('Tem certeza que deseja deletar este usuário?');" style="display:inline;">
+                                    <button type="submit" class="btn btn-sm btn-danger">
+                                        <i class="bi bi-trash"></i> Deletar
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </td>
+                        </form>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+    """,
+    "admin/admin_companies.html": """
+{% extends "admin/admin_layout.html" %}
+{% block title %}Gerenciar Empresas - Baggio Imóveis{% endblock %}
+{% block admin_content %}
+<h3 class="mb-4">Gerenciar Empresas</h3>
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">Adicionar Nova Empresa</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST">
+            <div class="input-group">
+                <input type="text" name="name" class="form-control" placeholder="Nome da nova empresa" required>
+                <button class="btn btn-accent" type="submit">
+                    <i class="bi bi-plus-circle"></i> Adicionar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Empresas Cadastradas</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Nome</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for company in companies %}
+                    <tr>
+                        <td>{{ company.id }}</td>
+                        <td>{{ company.name }}</td>
+                        <td>
+                            <form method="POST" action="{{ url_for('admin_delete_company', company_id=company.id) }}" onsubmit="return confirm('Tem certeza que deseja deletar esta empresa?');" style="display:inline;">
+                                <button type="submit" class="btn btn-sm btn-danger">
+                                    <i class="bi bi-trash"></i> Deletar
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+    """,
+    "admin/admin_profiles.html": """
+{% extends "admin/admin_layout.html" %}
+{% block title %}Gerenciar Perfis - Baggio Imóveis{% endblock %}
+{% block admin_content %}
+<h3 class="mb-4">Gerenciar Perfis de Acesso</h3>
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">Adicionar Novo Perfil</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST">
+            <div class="mb-3">
+                <label for="name" class="form-label">Nome do Perfil</label>
+                <input type="text" name="name" id="name" class="form-control" placeholder="Ex: Diretor Financeiro" required>
+            </div>
+            <div class="mb-3">
+                <label for="report_url" class="form-label">URL Pública do Relatório Power BI</label>
+                <input type="url" name="report_url" id="report_url" class="form-control" placeholder="Cole a URL pública aqui" required>
+            </div>
+            <button class="btn btn-accent" type="submit">
+                <i class="bi bi-plus-circle"></i> Adicionar Perfil
+            </button>
+        </form>
+    </div>
+</div>
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Perfis Cadastrados</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Nome do Perfil</th>
+                        <th>URL do Relatório</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for profile in profiles %}
+                    <tr>
+                        <td>{{ profile.id }}</td>
+                        <td>{{ profile.name }}</td>
+                        <td>
+                            <a href="{{ profile.report_url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-box-arrow-up-right"></i> Acessar
+                            </a>
+                        </td>
+                        <td>
+                            <form method="POST" action="{{ url_for('admin_delete_profile', profile_id=profile.id) }}" onsubmit="return confirm('Tem certeza que deseja deletar este perfil?');" style="display:inline;">
+                                <button type="submit" class="btn btn-sm btn-danger">
+                                    <i class="bi bi-trash"></i> Deletar
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+    """
 }
 
 # Configura o loader de templates personalizado
@@ -1029,6 +1287,16 @@ def admin_companies():
     companies = Company.query.all()
     return render_template('admin/admin_companies.html', companies=companies)
 
+@app.route('/admin/company/delete/<int:company_id>', methods=['POST'])
+@login_required
+@super_admin_required
+def admin_delete_company(company_id):
+    company = Company.query.get_or_404(company_id)
+    db.session.delete(company)
+    db.session.commit()
+    flash(f'Empresa {company.name} deletada com sucesso!', 'success')
+    return redirect(url_for('admin_companies'))
+
 @app.route('/admin/profiles', methods=['GET', 'POST'])
 @login_required
 @super_admin_required
@@ -1042,6 +1310,16 @@ def admin_profiles():
         flash('Perfil adicionado com sucesso!', 'success')
     profiles = Profile.query.all()
     return render_template('admin/admin_profiles.html', profiles=profiles)
+
+@app.route('/admin/profile/delete/<int:profile_id>', methods=['POST'])
+@login_required
+@super_admin_required
+def admin_delete_profile(profile_id):
+    profile = Profile.query.get_or_404(profile_id)
+    db.session.delete(profile)
+    db.session.commit()
+    flash(f'Perfil {profile.name} deletado com sucesso!', 'success')
+    return redirect(url_for('admin_profiles'))
 
 if __name__ == '__main__':
     with app.app_context():
