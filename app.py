@@ -6,9 +6,8 @@
 # Instruções de Uso:
 # 1. Salve este código como 'app.py'.
 # 2. Instale as dependências necessárias: 
-#    pip install Flask Flask-SQLAlchemy Flask-Login Werkzeug requests
-# 3. Execute o script no terminal: python app.py
-# 4. Acesse em seu navegador: http://127.0.0.1:5000
+# 3.  pip install Flask Flask-SQLAlchemy Flask-Login Werkzeug requests
+# 4. Execute o script no terminal: python app.py
 # 5. O primeiro usuário a se cadastrar será o Super Admin.
 # -----------------------------------------------------------------------------
 
