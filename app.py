@@ -1,14 +1,14 @@
 # -----------------------------------------------------------------------------
-# Portal de Dashboards para Imobiliárias - MVP
+# Portal de Dashboards para Baggio Imóveis - MVP
 # Desenvolvido por: Delmack Consultoria
 # Contato para Suporte: delmackconsultoria@gmail.com
 #
 # Instruções de Uso:
 # 1. Salve este código como 'app.py'.
 # 2. Instale as dependências necessárias: 
-# 3.  pip install Flask Flask-SQLAlchemy Flask-Login Werkzeug requests
-# 4. Execute o script no terminal: python app.py
-# 5. O primeiro usuário a se cadastrar será o Super Admin.
+#    pip install -r requirements.txt
+# 3. Execute o script no terminal: python app.py
+# 4. O primeiro usuário a se cadastrar será o Super Admin.
 # -----------------------------------------------------------------------------
 
 import os
@@ -22,17 +22,22 @@ from jinja2 import BaseLoader, TemplateNotFound
 from io import StringIO
 from collections import Counter
 import statistics
+from dotenv import load_dotenv
+
+# Carrega variáveis de ambiente
+load_dotenv()
 
 # --- CONFIGURAÇÃO DA APLICAÇÃO ---
-app = Flask(__name__)
-app.config['SECRET_KEY'] = 'uma-chave-secreta-muito-forte-e-dificil-de-adivinhar'
-# Configuração do Banco de Dados SQLite
+app = Flask(__name__, static_folder='static')
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'uma-chave-secreta-muito-forte-e-dificil-de-adivinhar')
+
+# Configuração do Banco de Dados
 basedir = os.path.abspath(os.path.dirname(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'portal.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///' + os.path.join(basedir, 'portal.db'))
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Configuração da API Properfy (SUBSTITUA PELO SEU TOKEN)
-app.config['PROPERFY_API_TOKEN'] = '05ad4b19-08e7-4534-a594-51e3665fe0f5'
+# Configuração da API Properfy
+app.config['PROPERFY_API_TOKEN'] = os.getenv('PROPERFY_API_TOKEN', '05ad4b19-08e7-4534-a594-51e3665fe0f5')
 app.config['PROPERFY_API_URL'] = 'https://sandbox.properfy.com.br/api/property/property'
 
 db = SQLAlchemy(app)
@@ -81,22 +86,138 @@ html_templates = {
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% block title %}{% endblock %} - Portal Delmack</title>
+    <title>{% block title %}{% endblock %} - Baggio Imóveis</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
-      body { background-color: #f8f9fa; }
-      .navbar { background-color: #343a40; }
-      .footer { font-size: 0.9em; text-align: center; padding: 20px 0; color: #6c757d; }
-      .card { margin-bottom: 1.5rem; }
-      .iframe-container { position: relative; overflow: hidden; width: 100%; padding-top: 56.25%; }
-      .responsive-iframe { position: absolute; top: 0; left: 0; bottom: 0; right: 0; width: 100%; height: 100%; }
+      :root {
+        --primary-blue: #1a365d;
+        --secondary-blue: #2c5282;
+        --accent-orange: #ed8936;
+        --light-orange: #fbd38d;
+        --dark-gray: #2d3748;
+        --light-gray: #e2e8f0;
+      }
+      
+      body { 
+        background-color: #f8f9fa;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      }
+      
+      .navbar { 
+        background-color: var(--primary-blue) !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+      
+      .navbar-brand {
+        font-weight: 700;
+        color: white !important;
+      }
+      
+      .nav-link {
+        color: rgba(255,255,255,0.8) !important;
+        font-weight: 500;
+        transition: all 0.3s;
+      }
+      
+      .nav-link:hover, .nav-link.active {
+        color: var(--accent-orange) !important;
+      }
+      
+      .btn-primary {
+        background-color: var(--primary-blue);
+        border-color: var(--primary-blue);
+      }
+      
+      .btn-primary:hover {
+        background-color: var(--secondary-blue);
+        border-color: var(--secondary-blue);
+      }
+      
+      .btn-accent {
+        background-color: var(--accent-orange);
+        border-color: var(--accent-orange);
+        color: white;
+      }
+      
+      .btn-accent:hover {
+        background-color: #dd6b20;
+        border-color: #dd6b20;
+      }
+      
+      .footer { 
+        background-color: var(--primary-blue);
+        color: white;
+        padding: 20px 0;
+        margin-top: 40px;
+      }
+      
+      .card { 
+        margin-bottom: 1.5rem; 
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        transition: transform 0.3s, box-shadow 0.3s;
+        border: none;
+      }
+      
+      .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 15px rgba(0,0,0,0.1);
+      }
+      
+      .card-header {
+        background-color: var(--primary-blue);
+        color: white;
+        border-radius: 10px 10px 0 0 !important;
+      }
+      
+      .iframe-container { 
+        position: relative; 
+        overflow: hidden; 
+        width: 100%; 
+        padding-top: 56.25%; 
+        border-radius: 10px;
+      }
+      
+      .responsive-iframe { 
+        position: absolute; 
+        top: 0; 
+        left: 0; 
+        bottom: 0; 
+        right: 0; 
+        width: 100%; 
+        height: 100%; 
+        border-radius: 10px;
+      }
+      
+      .auth-container {
+        max-width: 500px;
+        margin: 0 auto;
+        padding: 2rem;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      }
+      
+      .logo-container {
+        text-align: center;
+        margin-bottom: 2rem;
+      }
+      
+      .logo-img {
+        max-height: 100px;
+        margin-bottom: 1rem;
+      }
     </style>
     {% block extra_css %}{% endblock %}
   </head>
   <body>
-    <nav class="navbar navbar-expand-lg navbar-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark mb-4">
       <div class="container">
-        <a class="navbar-brand" href="{{ url_for('index') }}">Portal Delmack</a>
+        <a class="navbar-brand d-flex align-items-center" href="{{ url_for('index') }}">
+          <img src="{{ url_for('static', filename='baggio-logo.png') }}" alt="Baggio Imóveis" height="40" class="me-2">
+          Portal Baggio
+        </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
@@ -104,26 +225,26 @@ html_templates = {
           <ul class="navbar-nav ms-auto">
             {% if current_user.is_authenticated %}
               {% if current_user.is_super_admin %}
-                <li class="nav-item"><a class="nav-link" href="{{ url_for('admin_dashboard') }}">Admin Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('admin_dashboard') }}"><i class="bi bi-speedometer2 me-1"></i> Admin</a></li>
               {% else %}
-                <li class="nav-item"><a class="nav-link" href="{{ url_for('dashboard') }}">Meu Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('dashboard') }}"><i class="bi bi-speedometer2 me-1"></i> Dashboard</a></li>
               {% endif %}
-              <li class="nav-item"><a class="nav-link" href="{{ url_for('imoveis') }}">IMÓVEIS</a></li>
-              <li class="nav-item"><a class="nav-link" href="{{ url_for('contratos') }}">CONTRATOS</a></li>
-              <li class="nav-item"><a class="nav-link" href="{{ url_for('graficos') }}">GRÁFICOS</a></li>
-              <li class="nav-item"><a class="nav-link" href="{{ url_for('leads') }}">LEADS</a></li>
-              <li class="nav-item"><a class="nav-link" href="{{ url_for('manutencao') }}">MANUTENÇÃO</a></li>
-              <li class="nav-item"><a class="nav-link" href="{{ url_for('logout') }}">Sair</a></li>
+              <li class="nav-item"><a class="nav-link" href="{{ url_for('imoveis') }}"><i class="bi bi-house me-1"></i> Imóveis</a></li>
+              <li class="nav-item"><a class="nav-link" href="{{ url_for('contratos') }}"><i class="bi bi-file-earmark-text me-1"></i> Contratos</a></li>
+              <li class="nav-item"><a class="nav-link" href="{{ url_for('graficos') }}"><i class="bi bi-bar-chart me-1"></i> Gráficos</a></li>
+              <li class="nav-item"><a class="nav-link" href="{{ url_for('leads') }}"><i class="bi bi-people me-1"></i> Leads</a></li>
+              <li class="nav-item"><a class="nav-link" href="{{ url_for('manutencao') }}"><i class="bi bi-tools me-1"></i> Manutenção</a></li>
+              <li class="nav-item"><a class="nav-link" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right me-1"></i> Sair</a></li>
             {% else %}
-              <li class="nav-item"><a class="nav-link" href="{{ url_for('login') }}">Login</a></li>
-              <li class="nav-item"><a class="nav-link" href="{{ url_for('register') }}">Cadastrar</a></li>
+              <li class="nav-item"><a class="nav-link" href="{{ url_for('login') }}"><i class="bi bi-box-arrow-in-right me-1"></i> Login</a></li>
+              <li class="nav-item"><a class="nav-link" href="{{ url_for('register') }}"><i class="bi bi-person-plus me-1"></i> Cadastrar</a></li>
             {% endif %}
           </ul>
         </div>
       </div>
     </nav>
 
-    <main class="container mt-4">
+    <main class="container">
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
           {% for category, message in messages %}
@@ -137,9 +258,12 @@ html_templates = {
       {% block content %}{% endblock %}
     </main>
 
-    <footer class="footer mt-auto py-3">
-      <div class="container">
-        <span>Desenvolvido por: <strong>Delmack Consultoria</strong> | Contato para Suporte e Melhorias: <a href="mailto:delmackconsultoria@gmail.com">delmackconsultoria@gmail.com</a></span>
+    <footer class="footer mt-5">
+      <div class="container text-center">
+        <span>© 2023 Baggio Imóveis - Todos os direitos reservados</span>
+        <div class="mt-2">
+          <small>Desenvolvido por: <strong>Delmack Consultoria</strong> | Contato: <a href="mailto:delmackconsultoria@gmail.com" class="text-white">delmackconsultoria@gmail.com</a></small>
+        </div>
       </div>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -149,41 +273,54 @@ html_templates = {
     """,
     "index.html": """
 {% extends "layout.html" %}
-{% block title %}Bem-vindo{% endblock %}
+{% block title %}Bem-vindo - Baggio Imóveis{% endblock %}
 {% block content %}
-<div class="p-5 mb-4 bg-light rounded-3">
-  <div class="container-fluid py-5">
-    <h1 class="display-5 fw-bold">Bem-vindo ao Portal de Dashboards</h1>
-    <p class="col-md-8 fs-4">Acesse seus relatórios de Business Intelligence de forma centralizada e segura. Faça login para continuar.</p>
-    <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg">Fazer Login</a>
-    <a href="{{ url_for('register') }}" class="btn btn-secondary btn-lg">Cadastrar</a>
+<div class="row justify-content-center">
+  <div class="col-md-8">
+    <div class="card border-0 shadow-lg">
+      <div class="card-body text-center p-5">
+        <img src="{{ url_for('static', filename='baggio-logo.png') }}" alt="Baggio Imóveis" class="img-fluid mb-4" style="max-height: 120px;">
+        <h1 class="display-5 fw-bold mb-4">Portal de Dashboards Baggio Imóveis</h1>
+        <p class="lead mb-4">Acesse seus relatórios de Business Intelligence de forma centralizada e segura.</p>
+        <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+          <a href="{{ url_for('login') }}" class="btn btn-accent btn-lg px-4 gap-3">Fazer Login</a>
+          <a href="{{ url_for('register') }}" class="btn btn-outline-secondary btn-lg px-4">Cadastrar</a>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 {% endblock %}
     """,
     "login.html": """
 {% extends "layout.html" %}
-{% block title %}Login{% endblock %}
+{% block title %}Login - Baggio Imóveis{% endblock %}
 {% block content %}
 <div class="row justify-content-center">
   <div class="col-md-6">
-    <div class="card">
-      <div class="card-body">
-        <h3 class="card-title text-center">Login</h3>
-        <form method="POST" action="{{ url_for('login') }}">
-          <div class="mb-3">
-            <label for="email" class="form-label">E-mail</label>
-            <input type="email" class="form-control" id="email" name="email" required>
-          </div>
-          <div class="mb-3">
-            <label for="password" class="form-label">Senha</label>
-            <input type="password" class="form-control" id="password" name="password" required>
-          </div>
-          <div class="d-grid">
-            <button type="submit" class="btn btn-primary">Entrar</button>
-          </div>
-        </form>
+    <div class="auth-container">
+      <div class="logo-container">
+        <img src="{{ url_for('static', filename='baggio-logo.png') }}" alt="Baggio Imóveis" class="logo-img">
+        <h3 class="text-center">Acesse o Portal</h3>
       </div>
+      
+      <form method="POST" action="{{ url_for('login') }}">
+        <div class="mb-3">
+          <label for="email" class="form-label">E-mail</label>
+          <input type="email" class="form-control" id="email" name="email" required>
+        </div>
+        <div class="mb-3">
+          <label for="password" class="form-label">Senha</label>
+          <input type="password" class="form-control" id="password" name="password" required>
+        </div>
+        <div class="d-grid gap-2">
+          <button type="submit" class="btn btn-accent">Entrar</button>
+          <a href="{{ url_for('register') }}" class="btn btn-outline-secondary">Criar conta</a>
+        </div>
+        <div class="text-center mt-3">
+          <a href="#" class="text-muted">Esqueceu sua senha?</a>
+        </div>
+      </form>
     </div>
   </div>
 </div>
@@ -191,31 +328,34 @@ html_templates = {
     """,
     "register.html": """
 {% extends "layout.html" %}
-{% block title %}Cadastro{% endblock %}
+{% block title %}Cadastro - Baggio Imóveis{% endblock %}
 {% block content %}
 <div class="row justify-content-center">
   <div class="col-md-6">
-    <div class="card">
-      <div class="card-body">
-        <h3 class="card-title text-center">Criar Conta</h3>
-        <form method="POST" action="{{ url_for('register') }}">
-          <div class="mb-3">
-            <label for="username" class="form-label">Nome de Usuário</label>
-            <input type="text" class="form-control" id="username" name="username" required>
-          </div>
-          <div class="mb-3">
-            <label for="email" class="form-label">E-mail</label>
-            <input type="email" class="form-control" id="email" name="email" required>
-          </div>
-          <div class="mb-3">
-            <label for="password" class="form-label">Senha</label>
-            <input type="password" class="form-control" id="password" name="password" required>
-          </div>
-          <div class="d-grid">
-            <button type="submit" class="btn btn-primary">Cadastrar</button>
-          </div>
-        </form>
+    <div class="auth-container">
+      <div class="logo-container">
+        <img src="{{ url_for('static', filename='baggio-logo.png') }}" alt="Baggio Imóveis" class="logo-img">
+        <h3 class="text-center">Criar Nova Conta</h3>
       </div>
+      
+      <form method="POST" action="{{ url_for('register') }}">
+        <div class="mb-3">
+          <label for="username" class="form-label">Nome de Usuário</label>
+          <input type="text" class="form-control" id="username" name="username" required>
+        </div>
+        <div class="mb-3">
+          <label for="email" class="form-label">E-mail</label>
+          <input type="email" class="form-control" id="email" name="email" required>
+        </div>
+        <div class="mb-3">
+          <label for="password" class="form-label">Senha</label>
+          <input type="password" class="form-control" id="password" name="password" required>
+        </div>
+        <div class="d-grid gap-2">
+          <button type="submit" class="btn btn-accent">Cadastrar</button>
+          <a href="{{ url_for('login') }}" class="btn btn-outline-secondary">Já tenho uma conta</a>
+        </div>
+      </form>
     </div>
   </div>
 </div>
@@ -223,10 +363,16 @@ html_templates = {
     """,
     "dashboard.html": """
 {% extends "layout.html" %}
-{% block title %}Dashboard{% endblock %}
+{% block title %}Dashboard - Baggio Imóveis{% endblock %}
 {% block content %}
-  <h2 class="mb-4">Seu Dashboard</h2>
+  <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h2 class="h2">Seu Dashboard</h2>
+  </div>
+  
   <div class="card">
+    <div class="card-header">
+      <h5 class="card-title mb-0">Relatório de Performance</h5>
+    </div>
     <div class="card-body">
       <div class="iframe-container">
         <iframe title="Relatório" class="responsive-iframe" src="{{ report_url }}" frameborder="0" allowFullScreen="true"></iframe>
@@ -237,1886 +383,21 @@ html_templates = {
     """,
     "dashboard_no_access.html": """
 {% extends "layout.html" %}
-{% block title %}Acesso Negado{% endblock %}
+{% block title %}Acesso Negado - Baggio Imóveis{% endblock %}
 {% block content %}
 <div class="alert alert-warning">
-  <h4 class="alert-heading">Acesso Pendente</h4>
-  <p>Você ainda não foi associado a um perfil de visualização. Por favor, entre em contato com o administrador do sistema para que ele configure seu acesso.</p>
+  <div class="d-flex align-items-center">
+    <i class="bi bi-exclamation-triangle-fill me-3" style="font-size: 2rem;"></i>
+    <div>
+      <h4 class="alert-heading">Acesso Pendente</h4>
+      <p>Você ainda não foi associado a um perfil de visualização. Por favor, entre em contato com o administrador do sistema para que ele configure seu acesso.</p>
+      <a href="{{ url_for('logout') }}" class="btn btn-sm btn-outline-secondary">Sair</a>
+    </div>
+  </div>
 </div>
 {% endblock %}
     """,
-    "imoveis.html": """
-{% extends "layout.html" %}
-{% block title %}Mapa de Imóveis{% endblock %}
-{% block extra_css %}
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
-<style>
-  #map { height: 600px; width: 100%; border-radius: 0.25rem; }
-  .map-container { position: relative; }
-  .map-info {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    z-index: 1000;
-    background: white;
-    padding: 10px;
-    border-radius: 4px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.2);
-  }
-  .valor-transacao {
-    font-size: 1.3em;
-    font-weight: bold;
-    margin: 10px 0;
-    text-align: center;
-    padding: 5px;
-    background-color: #f8f9fa;
-    border-radius: 4px;
-  }
-  .valor-venda { color: #007bff; }
-  .valor-aluguel { color: #28a745; }
-  .popup-content {
-    max-width: 280px;
-  }
-  .popup-line {
-    margin: 5px 0;
-    padding-bottom: 5px;
-    border-bottom: 1px solid #eee;
-  }
-  .popup-header {
-    font-weight: bold;
-    color: #343a40;
-    margin-bottom: 8px;
-  }
-  .popup-label {
-    font-weight: 500;
-    color: #495057;
-  }
-  .graficos-mapa {
-    margin-top: 30px;
-  }
-  .chart-container-mapa {
-    height: 350px;
-  }
-</style>
-{% endblock %}
-
-{% block content %}
-<div class="container">
-  <h2 class="mb-4">Mapa de Imóveis em Curitiba</h2>
-  
-  <div class="card">
-    <div class="card-body map-container">
-      <div class="map-info">
-        <strong>Imóveis carregados:</strong> <span id="total-imoveis">0</span>
-      </div>
-      <div id="map"></div>
-    </div>
-  </div>
-
-  <div class="graficos-mapa">
-    <h3 class="mb-4">Análise Rápida do Portfólio</h3>
-    <div class="row">
-      <div class="col-md-4">
-        <div class="card">
-          <div class="card-body">
-            <h5 class="card-title">Tipo de Transação</h5>
-            <div class="chart-container-mapa">
-              <canvas id="chart-transacao"></canvas>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="card">
-          <div class="card-body">
-            <h5 class="card-title">Tipo de Imóvel</h5>
-            <div class="chart-container-mapa">
-              <canvas id="chart-tipo"></canvas>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="card">
-          <div class="card-body">
-            <h5 class="card-title">Propósito do Imóvel</h5>
-            <div class="chart-container-mapa">
-              <canvas id="chart-proposito"></canvas>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-{% endblock %}
-
-{% block extra_js %}
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  // Coordenadas do centro de Curitiba
-  const map = L.map('map').setView([-25.4296, -49.2719], 12);
-
-  // Adiciona o mapa base
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-  }).addTo(map);
-
-  // Cluster de marcadores
-  let markers = L.markerClusterGroup();
-  map.addLayer(markers);
-
-  // Elementos DOM
-  const totalImoveisSpan = document.getElementById('total-imoveis');
-
-  // Formata valor monetário
-  function formatarValor(valor) {
-    if (!valor || valor <= 0) return 'Valor não informado';
-    return 'R$ ' + parseFloat(valor).toLocaleString('pt-BR', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
-  }
-
-  // Carrega dados de imóveis
-  function carregarImoveis() {
-    fetch('/api/imoveis')
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Erro ao carregar dados');
-        }
-        return response.json();
-      })
-      .then(data => {
-        if (data.error) {
-          throw new Error(data.error);
-        }
-        
-        exibirImoveis(data);
-      })
-      .catch(error => {
-        console.error('Erro:', error);
-        alert(error.message || 'Erro ao carregar imóveis');
-      });
-  }
-
-  // Exibe imóveis no mapa
-  function exibirImoveis(data) {
-    markers.clearLayers();
-    totalImoveisSpan.textContent = data.length;
-    
-    data.forEach(imovel => {
-      if (imovel.dcmAddressLatitude && imovel.dcmAddressLongitude) {
-        const marker = L.marker([imovel.dcmAddressLatitude, imovel.dcmAddressLongitude]);
-        
-        let valorHtml = '';
-        if (imovel.chrTransactionType === 'SALE') {
-          valorHtml = `<div class="valor-transacao valor-venda">${formatarValor(imovel.dcmSale)}</div>`;
-        } else if (imovel.chrTransactionType === 'RENT') {
-          const valorTotalAluguel = (imovel.dcmExpectedRent || 0) + (imovel.dcmCondoValue || 0);
-          valorHtml = `<div class="valor-transacao valor-aluguel">${formatarValor(valorTotalAluguel)}</div>`;
-        }
-
-        const popupContent = `
-          <div class="popup-content">
-            <div class="popup-header">${imovel.chrCondoName}</div>
-            
-            <div class="popup-line">
-              <span class="popup-label">Tipo:</span> ${imovel.chrType || 'Não informado'}
-            </div>
-            
-            <div class="popup-line">
-              <span class="popup-label">Endereço:</span> ${imovel.chrAddressStreet || 'Não informado'}
-            </div>
-            
-            <div class="popup-line">
-              <span class="popup-label">Bairro:</span> ${imovel.chrAddressDistrict || 'Não informado'}
-            </div>
-            
-            <div class="popup-line">
-              <span class="popup-label">CEP:</span> ${imovel.chrAddressPostalCode || 'Não informado'}
-            </div>
-            
-            ${valorHtml}
-            
-            <div class="popup-line">
-              <small>Lat: ${imovel.dcmAddressLatitude.toFixed(6)}, Lng: ${imovel.dcmAddressLongitude.toFixed(6)}</small>
-            </div>
-          </div>
-        `;
-        
-        marker.bindPopup(popupContent);
-        markers.addLayer(marker);
-      }
-    });
-  }
-
-  // Carrega dados para gráficos do mapa
-  function carregarGraficosMapa() {
-    fetch('/api/imoveis/graficos')
-      .then(response => response.json())
-      .then(data => {
-        if (data.error) {
-          throw new Error(data.error);
-        }
-        criarGraficosMapa(data);
-      })
-      .catch(error => {
-        console.error('Erro ao carregar dados para gráficos do mapa:', error);
-      });
-  }
-
-  // Cria gráficos abaixo do mapa
-  function criarGraficosMapa(data) {
-    const colors = ['#36A2EB', '#FF6384', '#FFCE56', '#4BC0C0', '#9966FF'];
-
-    // Gráfico de Transação
-    new Chart(document.getElementById('chart-transacao'), {
-      type: 'pie',
-      data: {
-        labels: data.transacao.labels,
-        datasets: [{
-          data: data.transacao.values,
-          backgroundColor: colors.slice(0, 2)
-        }]
-      },
-      options: { responsive: true, maintainAspectRatio: false }
-    });
-
-    // Gráfico de Tipo
-    new Chart(document.getElementById('chart-tipo'), {
-      type: 'bar',
-      data: {
-        labels: data.tipo.labels,
-        datasets: [{
-          label: 'Quantidade',
-          data: data.tipo.values,
-          backgroundColor: '#4BC0C0'
-        }]
-      },
-      options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y' }
-    });
-
-    // Gráfico de Propósito
-    new Chart(document.getElementById('chart-proposito'), {
-      type: 'doughnut',
-      data: {
-        labels: data.proposito.labels,
-        datasets: [{
-          data: data.proposito.values,
-          backgroundColor: colors.slice(2, 5)
-        }]
-      },
-      options: { responsive: true, maintainAspectRatio: false }
-    });
-  }
-
-  // Carrega dados iniciais
-  carregarImoveis();
-  carregarGraficosMapa();
-});
-</script>
-{% endblock %}
-    """,
-    "contratos.html": """
-{% extends "layout.html" %}
-{% block title %}Contratos de Aluguel{% endblock %}
-{% block extra_css %}
-<style>
-  .table-container {
-    max-height: 600px;
-    overflow-y: auto;
-  }
-  .table th {
-    position: sticky;
-    top: 0;
-    background-color: #343a40;
-    color: white;
-    z-index: 10;
-  }
-  .loading-spinner {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 200px;
-  }
-  .status-badge {
-    font-size: 0.8em;
-    padding: 4px 8px;
-    border-radius: 12px;
-  }
-  .status-ativo { background-color: #d4edda; color: #155724; }
-  .status-inativo { background-color: #f8d7da; color: #721c24; }
-  .status-pendente { background-color: #fff3cd; color: #856404; }
-  .valor-destaque {
-    font-weight: bold;
-    color: #28a745;
-  }
-  .info-card {
-    background-color: #e9ecef;
-    border-radius: 8px;
-    padding: 15px;
-    margin-bottom: 20px;
-  }
-</style>
-{% endblock %}
-
-{% block content %}
-<div class="container">
-  <h2 class="mb-4">Contratos de Aluguel</h2>
-  
-  <div class="info-card">
-    <div class="row">
-      <div class="col-md-3">
-        <strong>Total de Contratos:</strong> <span id="total-contratos" class="text-primary">0</span>
-      </div>
-      <div class="col-md-3">
-        <strong>Contratos Ativos:</strong> <span id="contratos-ativos" class="text-success">0</span>
-      </div>
-      <div class="col-md-3">
-        <strong>Valor Total Mensal:</strong> <span id="valor-total" class="valor-destaque">R$ 0,00</span>
-      </div>
-      <div class="col-md-3">
-        <button id="btn-refresh" class="btn btn-outline-primary btn-sm">
-          <i class="bi bi-arrow-clockwise"></i> Atualizar
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-body">
-      <div id="loading" class="loading-spinner" style="display: none;">
-        <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">Carregando...</span>
-        </div>
-      </div>
-      
-      <div id="error-message" class="alert alert-danger" style="display: none;"></div>
-      
-      <div class="table-container">
-        <table class="table table-striped table-hover">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Inquilino</th>
-              <th>Imóvel</th>
-              <th>Endereço</th>
-              <th>Valor Aluguel</th>
-              <th>Data Início</th>
-              <th>Data Fim</th>
-              <th>Status</th>
-              <th>Observações</th>
-            </tr>
-          </thead>
-          <tbody id="contratos-tbody">
-            <!-- Os dados serão inseridos aqui via JavaScript -->
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-</div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  // Elementos DOM
-  const loadingElement = document.getElementById('loading');
-  const errorElement = document.getElementById('error-message');
-  const tbody = document.getElementById('contratos-tbody');
-  const totalContratosSpan = document.getElementById('total-contratos');
-  const contratosAtivosSpan = document.getElementById('contratos-ativos');
-  const valorTotalSpan = document.getElementById('valor-total');
-  const btnRefresh = document.getElementById('btn-refresh');
-
-  // Formata valor monetário
-  function formatarValor(valor) {
-    if (!valor || valor <= 0) return 'R$ 0,00';
-    return 'R$ ' + parseFloat(valor).toLocaleString('pt-BR', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
-  }
-
-  // Formata data
-  function formatarData(dataString) {
-    if (!dataString) return 'Não informado';
-    try {
-      const data = new Date(dataString);
-      return data.toLocaleDateString('pt-BR');
-    } catch (e) {
-      return dataString;
-    }
-  }
-
-  // Formata status
-  function formatarStatus(status) {
-    if (!status) return '<span class="status-badge status-pendente">Não informado</span>';
-    
-    const statusLower = status.toLowerCase();
-    let className = 'status-badge ';
-    
-    if (statusLower.includes('ativo') || statusLower.includes('vigente')) {
-      className += 'status-ativo';
-    } else if (statusLower.includes('inativo') || statusLower.includes('encerrado')) {
-      className += 'status-inativo';
-    } else {
-      className += 'status-pendente';
-    }
-    
-    return `<span class="${className}">${status}</span>`;
-  }
-
-  // Carrega dados de contratos
-  function carregarContratos() {
-    loadingElement.style.display = 'flex';
-    errorElement.style.display = 'none';
-    tbody.innerHTML = '';
-
-    fetch('/api/contratos')
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`Erro HTTP: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then(data => {
-        if (data.error) {
-          throw new Error(data.error);
-        }
-        
-        exibirContratos(data);
-        atualizarEstatisticas(data);
-      })
-      .catch(error => {
-        console.error('Erro:', error);
-        errorElement.textContent = error.message || 'Erro ao carregar contratos';
-        errorElement.style.display = 'block';
-      })
-      .finally(() => {
-        loadingElement.style.display = 'none';
-      });
-  }
-
-  // Exibe contratos na tabela
-  function exibirContratos(contratos) {
-    tbody.innerHTML = '';
-    
-    if (contratos.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted">Nenhum contrato encontrado</td></tr>';
-      return;
-    }
-
-    contratos.forEach(contrato => {
-      const row = document.createElement('tr');
-      row.innerHTML = `
-        <td>${contrato.id || 'N/A'}</td>
-        <td>${contrato.tenant_name || 'Não informado'}</td>
-        <td>${contrato.property_name || 'Não informado'}</td>
-        <td>${contrato.property_address || 'Não informado'}</td>
-        <td class="valor-destaque">${formatarValor(contrato.rent_value)}</td>
-        <td>${formatarData(contrato.start_date)}</td>
-        <td>${formatarData(contrato.end_date)}</td>
-        <td>${formatarStatus(contrato.status)}</td>
-        <td>${contrato.observations || '-'}</td>
-      `;
-      tbody.appendChild(row);
-    });
-  }
-
-  // Atualiza estatísticas
-  function atualizarEstatisticas(contratos) {
-    const total = contratos.length;
-    const ativos = contratos.filter(c => {
-      const status = (c.status || '').toLowerCase();
-      return status.includes('ativo') || status.includes('vigente');
-    }).length;
-    
-    const valorTotal = contratos.reduce((sum, c) => {
-      const valor = parseFloat(c.rent_value) || 0;
-      return sum + valor;
-    }, 0);
-
-    totalContratosSpan.textContent = total;
-    contratosAtivosSpan.textContent = ativos;
-    valorTotalSpan.textContent = formatarValor(valorTotal);
-  }
-
-  // Event listeners
-  btnRefresh.addEventListener('click', carregarContratos);
-
-  // Carrega dados iniciais
-  carregarContratos();
-});
-</script>
-{% endblock %}
-    """,
-    "graficos.html": """
-{% extends "layout.html" %}
-{% block title %}Análise de Dados - Imóveis{% endblock %}
-{% block extra_css %}
-<style>
-  .chart-container {
-    position: relative;
-    height: 400px;
-    margin-bottom: 30px;
-  }
-  .chart-card {
-    margin-bottom: 30px;
-  }
-  .stats-card {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border-radius: 15px;
-    padding: 20px;
-    margin-bottom: 30px;
-  }
-  .stat-item {
-    text-align: center;
-    padding: 15px;
-  }
-  .stat-number {
-    font-size: 2.5rem;
-    font-weight: bold;
-    margin-bottom: 5px;
-  }
-  .stat-label {
-    font-size: 0.9rem;
-    opacity: 0.9;
-  }
-  .loading-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-  }
-  .loading-content {
-    background: white;
-    padding: 30px;
-    border-radius: 10px;
-    text-align: center;
-  }
-  .chart-title {
-    font-size: 1.2rem;
-    font-weight: 600;
-    margin-bottom: 15px;
-    color: #495057;
-  }
-  .filter-section {
-    background-color: #f8f9fa;
-    border-radius: 10px;
-    padding: 20px;
-    margin-bottom: 30px;
-  }
-</style>
-{% endblock %}
-
-{% block content %}
-<div class="container">
-  <h2 class="mb-4">Análise de Dados - Imóveis</h2>
-  
-  <!-- Loading Overlay -->
-  <div id="loading-overlay" class="loading-overlay" style="display: none;">
-    <div class="loading-content">
-      <div class="spinner-border text-primary mb-3" role="status"></div>
-      <h5>Carregando dados...</h5>
-      <p class="text-muted">Processando informações dos imóveis</p>
-    </div>
-  </div>
-
-  <!-- Estatísticas Gerais -->
-  <div class="stats-card">
-    <div class="row">
-      <div class="col-md-3">
-        <div class="stat-item">
-          <div class="stat-number" id="total-imoveis">0</div>
-          <div class="stat-label">Total de Imóveis</div>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="stat-item">
-          <div class="stat-number" id="valor-medio">R$ 0</div>
-          <div class="stat-label">Valor Médio de Venda</div>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="stat-item">
-          <div class="stat-number" id="area-media">0m²</div>
-          <div class="stat-label">Área Média</div>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="stat-item">
-          <div class="stat-number" id="ano-medio">0</div>
-          <div class="stat-label">Ano Médio de Construção</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Filtros -->
-  <div class="filter-section">
-    <div class="row">
-      <div class="col-md-4">
-        <button id="btn-refresh" class="btn btn-primary">
-          <i class="bi bi-arrow-clockwise"></i> Atualizar Dados
-        </button>
-      </div>
-      <div class="col-md-8">
-        <div class="text-end">
-          <small class="text-muted">Última atualização: <span id="last-update">-</span></small>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Gráficos -->
-  <div class="row">
-    <!-- Gráfico de Tipos de Imóveis -->
-    <div class="col-md-6">
-      <div class="card chart-card">
-        <div class="card-body">
-          <div class="chart-title">Distribuição por Tipo de Imóvel</div>
-          <div class="chart-container">
-            <canvas id="chart-tipos"></canvas>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Gráfico de Condições -->
-    <div class="col-md-6">
-      <div class="card chart-card">
-        <div class="card-body">
-          <div class="chart-title">Condição dos Imóveis</div>
-          <div class="chart-container">
-            <canvas id="chart-condicoes"></canvas>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Gráfico de Garagens -->
-    <div class="col-md-6">
-      <div class="card chart-card">
-        <div class="card-body">
-          <div class="chart-title">Distribuição de Vagas de Garagem</div>
-          <div class="chart-container">
-            <canvas id="chart-garagens"></canvas>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Gráfico de Anos de Construção -->
-    <div class="col-md-6">
-      <div class="card chart-card">
-        <div class="card-body">
-          <div class="chart-title">Imóveis por Década de Construção</div>
-          <div class="chart-container">
-            <canvas id="chart-decadas"></canvas>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Gráfico de Valores de Venda -->
-    <div class="col-md-12">
-      <div class="card chart-card">
-        <div class="card-body">
-          <div class="chart-title">Distribuição de Valores de Venda</div>
-          <div class="chart-container">
-            <canvas id="chart-valores"></canvas>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Gráfico de Área vs Valor -->
-    <div class="col-md-12">
-      <div class="card chart-card">
-        <div class="card-body">
-          <div class="chart-title">Relação entre Área Privativa e Valor de Venda</div>
-          <div class="chart-container">
-            <canvas id="chart-area-valor"></canvas>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Mensagem de Erro -->
-  <div id="error-message" class="alert alert-danger" style="display: none;"></div>
-</div>
-{% endblock %}
-
-{% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  // Elementos DOM
-  const loadingOverlay = document.getElementById('loading-overlay');
-  const errorElement = document.getElementById('error-message');
-  const btnRefresh = document.getElementById('btn-refresh');
-  
-  // Elementos de estatísticas
-  const totalImoveisSpan = document.getElementById('total-imoveis');
-  const valorMedioSpan = document.getElementById('valor-medio');
-  const areaMediaSpan = document.getElementById('area-media');
-  const anoMedioSpan = document.getElementById('ano-medio');
-  const lastUpdateSpan = document.getElementById('last-update');
-
-  // Variáveis para armazenar os gráficos
-  let charts = {};
-
-  // Cores para os gráficos
-  const colors = [
-    '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
-    '#FF9F40', '#FF6384', '#C9CBCF', '#4BC0C0', '#FF6384'
-  ];
-
-  // Formata valor monetário
-  function formatarValor(valor) {
-    if (!valor || valor <= 0) return 'R$ 0';
-    return 'R$ ' + parseFloat(valor).toLocaleString('pt-BR', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    });
-  }
-
-  // Formata área
-  function formatarArea(area) {
-    if (!area || area <= 0) return '0m²';
-    return parseFloat(area).toLocaleString('pt-BR', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }) + 'm²';
-  }
-
-  // Carrega dados para gráficos
-  function carregarDadosGraficos() {
-    loadingOverlay.style.display = 'flex';
-    errorElement.style.display = 'none';
-
-    fetch('/api/graficos')
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`Erro HTTP: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then(data => {
-        if (data.error) {
-          throw new Error(data.error);
-        }
-        
-        atualizarEstatisticas(data.statistics);
-        criarGraficos(data.charts);
-        lastUpdateSpan.textContent = new Date().toLocaleString('pt-BR');
-      })
-      .catch(error => {
-        console.error('Erro:', error);
-        errorElement.textContent = error.message || 'Erro ao carregar dados para gráficos';
-        errorElement.style.display = 'block';
-      })
-      .finally(() => {
-        loadingOverlay.style.display = 'none';
-      });
-  }
-
-  // Atualiza estatísticas gerais
-  function atualizarEstatisticas(stats) {
-    totalImoveisSpan.textContent = stats.total_imoveis || 0;
-    valorMedioSpan.textContent = formatarValor(stats.valor_medio);
-    areaMediaSpan.textContent = formatarArea(stats.area_media);
-    anoMedioSpan.textContent = Math.round(stats.ano_medio) || 0;
-  }
-
-  // Destroi gráficos existentes
-  function destruirGraficos() {
-    Object.values(charts).forEach(chart => {
-      if (chart) chart.destroy();
-    });
-    charts = {};
-  }
-
-  // Cria todos os gráficos
-  function criarGraficos(data) {
-    destruirGraficos();
-
-    // Gráfico de Tipos de Imóveis
-    if (data.tipos && data.tipos.labels.length > 0) {
-      charts.tipos = new Chart(document.getElementById('chart-tipos'), {
-        type: 'pie',
-        data: {
-          labels: data.tipos.labels,
-          datasets: [{
-            data: data.tipos.values,
-            backgroundColor: colors.slice(0, data.tipos.labels.length)
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'bottom'
-            }
-          }
-        }
-      });
-    }
-
-    // Gráfico de Condições
-    if (data.condicoes && data.condicoes.labels.length > 0) {
-      charts.condicoes = new Chart(document.getElementById('chart-condicoes'), {
-        type: 'doughnut',
-        data: {
-          labels: data.condicoes.labels,
-          datasets: [{
-            data: data.condicoes.values,
-            backgroundColor: colors.slice(0, data.condicoes.labels.length)
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'bottom'
-            }
-          }
-        }
-      });
-    }
-
-    // Gráfico de Garagens
-    if (data.garagens && data.garagens.labels.length > 0) {
-      charts.garagens = new Chart(document.getElementById('chart-garagens'), {
-        type: 'bar',
-        data: {
-          labels: data.garagens.labels,
-          datasets: [{
-            label: 'Quantidade de Imóveis',
-            data: data.garagens.values,
-            backgroundColor: '#36A2EB'
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            y: {
-              beginAtZero: true
-            }
-          }
-        }
-      });
-    }
-
-    // Gráfico de Décadas
-    if (data.decadas && data.decadas.labels.length > 0) {
-      charts.decadas = new Chart(document.getElementById('chart-decadas'), {
-        type: 'line',
-        data: {
-          labels: data.decadas.labels,
-          datasets: [{
-            label: 'Imóveis Construídos',
-            data: data.decadas.values,
-            borderColor: '#FF6384',
-            backgroundColor: 'rgba(255, 99, 132, 0.1)',
-            fill: true
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            y: {
-              beginAtZero: true
-            }
-          }
-        }
-      });
-    }
-
-    // Gráfico de Valores
-    if (data.valores && data.valores.labels.length > 0) {
-      charts.valores = new Chart(document.getElementById('chart-valores'), {
-        type: 'bar',
-        data: {
-          labels: data.valores.labels,
-          datasets: [{
-            label: 'Quantidade de Imóveis',
-            data: data.valores.values,
-            backgroundColor: '#FFCE56'
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            y: {
-              beginAtZero: true
-            }
-          }
-        }
-      });
-    }
-
-    // Gráfico de Área vs Valor
-    if (data.area_valor && data.area_valor.length > 0) {
-      charts.areaValor = new Chart(document.getElementById('chart-area-valor'), {
-        type: 'scatter',
-        data: {
-          datasets: [{
-            label: 'Área vs Valor',
-            data: data.area_valor,
-            backgroundColor: 'rgba(75, 192, 192, 0.6)',
-            borderColor: '#4BC0C0'
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            x: {
-              title: {
-                display: true,
-                text: 'Área Privativa (m²)'
-              }
-            },
-            y: {
-              title: {
-                display: true,
-                text: 'Valor de Venda (R$)'
-              }
-            }
-          }
-        }
-      });
-    }
-  }
-
-  // Event listeners
-  btnRefresh.addEventListener('click', carregarDadosGraficos);
-
-  // Carrega dados iniciais
-  carregarDadosGraficos();
-});
-</script>
-{% endblock %}
-    """,
-    "leads.html": """
-{% extends "layout.html" %}
-{% block title %}Análise de Leads - CRM{% endblock %}
-{% block extra_css %}
-<style>
-  .chart-container {
-    position: relative;
-    height: 400px;
-    margin-bottom: 30px;
-  }
-  .chart-card {
-    margin-bottom: 30px;
-  }
-  .stats-card {
-    background: linear-gradient(135deg, #2980b9 0%, #2c3e50 100%);
-    color: white;
-    border-radius: 15px;
-    padding: 20px;
-    margin-bottom: 30px;
-  }
-  .stat-item {
-    text-align: center;
-    padding: 15px;
-  }
-  .stat-number {
-    font-size: 2.5rem;
-    font-weight: bold;
-    margin-bottom: 5px;
-  }
-  .stat-label {
-    font-size: 0.9rem;
-    opacity: 0.9;
-  }
-  .loading-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-  }
-  .loading-content {
-    background: white;
-    padding: 30px;
-    border-radius: 10px;
-    text-align: center;
-  }
-  .chart-title {
-    font-size: 1.2rem;
-    font-weight: 600;
-    margin-bottom: 15px;
-    color: #495057;
-  }
-  .filter-section {
-    background-color: #f8f9fa;
-    border-radius: 10px;
-    padding: 20px;
-    margin-bottom: 30px;
-  }
-</style>
-{% endblock %}
-
-{% block content %}
-<div class="container">
-  <h2 class="mb-4">Análise de Leads - CRM</h2>
-  
-  <!-- Loading Overlay -->
-  <div id="loading-overlay" class="loading-overlay" style="display: none;">
-    <div class="loading-content">
-      <div class="spinner-border text-primary mb-3" role="status"></div>
-      <h5>Carregando dados...</h5>
-      <p class="text-muted">Processando informações de Leads</p>
-    </div>
-  </div>
-
-  <!-- Estatísticas Gerais -->
-  <div class="stats-card">
-    <div class="row">
-      <div class="col-md-3">
-        <div class="stat-item">
-          <div class="stat-number" id="total-leads">0</div>
-          <div class="stat-label">Total de Leads</div>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="stat-item">
-          <div class="stat-number" id="total-cards">0</div>
-          <div class="stat-label">Total de Cards</div>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="stat-item">
-          <div class="stat-number" id="cards-concluidos">0</div>
-          <div class="stat-label">Cards Concluídos</div>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="stat-item">
-          <div class="stat-number" id="taxa-conversao">0%</div>
-          <div class="stat-label">Taxa de Conversão</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Filtros -->
-  <div class="filter-section">
-    <div class="row">
-      <div class="col-md-4">
-        <button id="btn-refresh" class="btn btn-primary">
-          <i class="bi bi-arrow-clockwise"></i> Atualizar Dados
-        </button>
-      </div>
-      <div class="col-md-8">
-        <div class="text-end">
-          <small class="text-muted">Última atualização: <span id="last-update">-</span></small>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Gráficos -->
-  <div class="row">
-    <!-- Gráfico de Canais de Aquisição -->
-    <div class="col-md-6">
-      <div class="card chart-card">
-        <div class="card-body">
-          <div class="chart-title">Canais de Aquisição de Leads</div>
-          <div class="chart-container">
-            <canvas id="chart-canais"></canvas>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Gráfico de Status dos Cards -->
-    <div class="col-md-6">
-      <div class="card chart-card">
-        <div class="card-body">
-          <div class="chart-title">Status dos Cards</div>
-          <div class="chart-container">
-            <canvas id="chart-status-cards"></canvas>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Gráfico de Tipos de Transação -->
-    <div class="col-md-6">
-      <div class="card chart-card">
-        <div class="card-body">
-          <div class="chart-title">Tipos de Transação</div>
-          <div class="chart-container">
-            <canvas id="chart-transacoes"></canvas>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Gráfico de Estágios do Pipeline -->
-    <div class="col-md-6">
-      <div class="card chart-card">
-        <div class="card-body">
-          <div class="chart-title">Leads por Estágio do Pipeline</div>
-          <div class="chart-container">
-            <canvas id="chart-pipeline"></canvas>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Mensagem de Erro -->
-  <div id="error-message" class="alert alert-danger" style="display: none;"></div>
-</div>
-{% endblock %}
-
-{% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  // Elementos DOM
-  const loadingOverlay = document.getElementById('loading-overlay');
-  const errorElement = document.getElementById('error-message');
-  const btnRefresh = document.getElementById('btn-refresh');
-  
-  // Elementos de estatísticas
-  const totalLeadsSpan = document.getElementById('total-leads');
-  const totalCardsSpan = document.getElementById('total-cards');
-  const cardsConcluidosSpan = document.getElementById('cards-concluidos');
-  const taxaConversaoSpan = document.getElementById('taxa-conversao');
-  const lastUpdateSpan = document.getElementById('last-update');
-
-  // Variáveis para armazenar os gráficos
-  let charts = {};
-
-  // Cores para os gráficos
-  const colors = [
-    '#3498db', '#2ecc71', '#e74c3c', '#f1c40f', '#9b59b6',
-    '#1abc9c', '#d35400', '#34495e', '#7f8c8d', '#bdc3c7'
-  ];
-
-  // Carrega dados para gráficos de leads
-  function carregarDadosLeads() {
-    loadingOverlay.style.display = 'flex';
-    errorElement.style.display = 'none';
-
-    fetch('/api/leads')
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`Erro HTTP: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then(data => {
-        if (data.error) {
-          throw new Error(data.error);
-        }
-        
-        atualizarEstatisticas(data.statistics);
-        criarGraficos(data.charts);
-        lastUpdateSpan.textContent = new Date().toLocaleString('pt-BR');
-      })
-      .catch(error => {
-        console.error('Erro:', error);
-        errorElement.textContent = error.message || 'Erro ao carregar dados de Leads';
-        errorElement.style.display = 'block';
-      })
-      .finally(() => {
-        loadingOverlay.style.display = 'none';
-      });
-  }
-
-  // Atualiza estatísticas gerais
-  function atualizarEstatisticas(stats) {
-    totalLeadsSpan.textContent = stats.total_leads || 0;
-    totalCardsSpan.textContent = stats.total_cards || 0;
-    cardsConcluidosSpan.textContent = stats.cards_concluidos || 0;
-    taxaConversaoSpan.textContent = (stats.taxa_conversao || 0).toFixed(1) + '%';
-  }
-
-  // Destroi gráficos existentes
-  function destruirGraficos() {
-    Object.values(charts).forEach(chart => {
-      if (chart) chart.destroy();
-    });
-    charts = {};
-  }
-
-  // Cria todos os gráficos
-  function criarGraficos(data) {
-    destruirGraficos();
-
-    // Gráfico de Canais de Aquisição
-    if (data.canais && data.canais.labels.length > 0) {
-      charts.canais = new Chart(document.getElementById('chart-canais'), {
-        type: 'pie',
-        data: {
-          labels: data.canais.labels,
-          datasets: [{
-            data: data.canais.values,
-            backgroundColor: colors.slice(0, data.canais.labels.length)
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'bottom'
-            }
-          }
-        }
-      });
-    }
-
-    // Gráfico de Status dos Cards
-    if (data.status_cards && data.status_cards.labels.length > 0) {
-      charts.statusCards = new Chart(document.getElementById('chart-status-cards'), {
-        type: 'doughnut',
-        data: {
-          labels: data.status_cards.labels,
-          datasets: [{
-            data: data.status_cards.values,
-            backgroundColor: colors.slice(0, data.status_cards.labels.length)
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'bottom'
-            }
-          }
-        }
-      });
-    }
-
-    // Gráfico de Tipos de Transação
-    if (data.transacoes && data.transacoes.labels.length > 0) {
-      charts.transacoes = new Chart(document.getElementById('chart-transacoes'), {
-        type: 'bar',
-        data: {
-          labels: data.transacoes.labels,
-          datasets: [{
-            label: 'Quantidade de Leads',
-            data: data.transacoes.values,
-            backgroundColor: '#2ecc71'
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            y: {
-              beginAtZero: true
-            }
-          }
-        }
-      });
-    }
-
-    // Gráfico de Pipeline
-    if (data.pipeline && data.pipeline.labels.length > 0) {
-      charts.pipeline = new Chart(document.getElementById('chart-pipeline'), {
-        type: 'bar',
-        data: {
-          labels: data.pipeline.labels,
-          datasets: [{
-            label: 'Leads no Estágio',
-            data: data.pipeline.values,
-            backgroundColor: '#9b59b6'
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          indexAxis: 'y', // Funil horizontal
-          scales: {
-            x: {
-              beginAtZero: true
-            }
-          }
-        }
-      });
-    }
-  }
-
-  // Event listeners
-  btnRefresh.addEventListener('click', carregarDadosLeads);
-
-  // Carrega dados iniciais
-  carregarDadosLeads();
-});
-</script>
-{% endblock %}
-    """,
-    "manutencao.html": """
-{% extends "layout.html" %}
-{% block title %}Análise de Manutenção{% endblock %}
-{% block extra_css %}
-<style>
-  .chart-container {
-    position: relative;
-    height: 400px;
-    margin-bottom: 30px;
-  }
-  .chart-card {
-    margin-bottom: 30px;
-  }
-  .stats-card {
-    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-    color: white;
-    border-radius: 15px;
-    padding: 20px;
-    margin-bottom: 30px;
-  }
-  .stat-item {
-    text-align: center;
-    padding: 15px;
-  }
-  .stat-number {
-    font-size: 2.5rem;
-    font-weight: bold;
-    margin-bottom: 5px;
-  }
-  .stat-label {
-    font-size: 0.9rem;
-    opacity: 0.9;
-  }
-  .loading-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-  }
-  .loading-content {
-    background: white;
-    padding: 30px;
-    border-radius: 10px;
-    text-align: center;
-  }
-  .chart-title {
-    font-size: 1.2rem;
-    font-weight: 600;
-    margin-bottom: 15px;
-    color: #495057;
-  }
-  .filter-section {
-    background-color: #f8f9fa;
-    border-radius: 10px;
-    padding: 20px;
-    margin-bottom: 30px;
-  }
-</style>
-{% endblock %}
-
-{% block content %}
-<div class="container">
-  <h2 class="mb-4">Análise de Manutenção</h2>
-  
-  <!-- Loading Overlay -->
-  <div id="loading-overlay" class="loading-overlay" style="display: none;">
-    <div class="loading-content">
-      <div class="spinner-border text-primary mb-3" role="status"></div>
-      <h5>Carregando dados...</h5>
-      <p class="text-muted">Processando informações de Manutenção</p>
-    </div>
-  </div>
-
-  <!-- Estatísticas Gerais -->
-  <div class="stats-card">
-    <div class="row">
-      <div class="col-md-3">
-        <div class="stat-item">
-          <div class="stat-number" id="total-manutencoes">0</div>
-          <div class="stat-label">Total de Manutenções</div>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="stat-item">
-          <div class="stat-number" id="alta-prioridade">0</div>
-          <div class="stat-label">Alta Prioridade</div>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="stat-item">
-          <div class="stat-number" id="pendentes">0</div>
-          <div class="stat-label">Pendentes</div>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="stat-item">
-          <div class="stat-number" id="concluidas">0</div>
-          <div class="stat-label">Concluídas</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Filtros -->
-  <div class="filter-section">
-    <div class="row">
-      <div class="col-md-4">
-        <button id="btn-refresh" class="btn btn-primary">
-          <i class="bi bi-arrow-clockwise"></i> Atualizar Dados
-        </button>
-      </div>
-      <div class="col-md-8">
-        <div class="text-end">
-          <small class="text-muted">Última atualização: <span id="last-update">-</span></small>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Gráficos -->
-  <div class="row">
-    <!-- Gráfico de Prioridades -->
-    <div class="col-md-6">
-      <div class="card chart-card">
-        <div class="card-body">
-          <div class="chart-title">Distribuição por Prioridade</div>
-          <div class="chart-container">
-            <canvas id="chart-prioridades"></canvas>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Gráfico de Status -->
-    <div class="col-md-6">
-      <div class="card chart-card">
-        <div class="card-body">
-          <div class="chart-title">Status das Manutenções</div>
-          <div class="chart-container">
-            <canvas id="chart-status"></canvas>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Gráfico de Responsáveis -->
-    <div class="col-md-6">
-      <div class="card chart-card">
-        <div class="card-body">
-          <div class="chart-title">Manutenções por Responsável</div>
-          <div class="chart-container">
-            <canvas id="chart-responsaveis"></canvas>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Gráfico de Categorias -->
-    <div class="col-md-6">
-      <div class="card chart-card">
-        <div class="card-body">
-          <div class="chart-title">Categorias de Manutenção</div>
-          <div class="chart-container">
-            <canvas id="chart-categorias"></canvas>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Mensagem de Erro -->
-  <div id="error-message" class="alert alert-danger" style="display: none;"></div>
-</div>
-{% endblock %}
-
-{% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  // Elementos DOM
-  const loadingOverlay = document.getElementById('loading-overlay');
-  const errorElement = document.getElementById('error-message');
-  const btnRefresh = document.getElementById('btn-refresh');
-  
-  // Elementos de estatísticas
-  const totalManutencoesSpan = document.getElementById('total-manutencoes');
-  const altaPrioridadeSpan = document.getElementById('alta-prioridade');
-  const pendentesSpan = document.getElementById('pendentes');
-  const concluidasSpan = document.getElementById('concluidas');
-  const lastUpdateSpan = document.getElementById('last-update');
-
-  // Variáveis para armazenar os gráficos
-  let charts = {};
-
-  // Cores para os gráficos
-  const colors = [
-    '#e74c3c', '#f39c12', '#f1c40f', '#2ecc71', '#3498db',
-    '#9b59b6', '#1abc9c', '#34495e', '#95a5a6', '#e67e22'
-  ];
-
-  // Carrega dados para gráficos de manutenção
-  function carregarDadosManutencao() {
-    loadingOverlay.style.display = 'flex';
-    errorElement.style.display = 'none';
-
-    fetch('/api/manutencao_graficos')
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`Erro HTTP: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then(data => {
-        if (data.error) {
-          throw new Error(data.error);
-        }
-        
-        atualizarEstatisticas(data.statistics);
-        criarGraficos(data.charts);
-        lastUpdateSpan.textContent = new Date().toLocaleString('pt-BR');
-      })
-      .catch(error => {
-        console.error('Erro:', error);
-        errorElement.textContent = error.message || 'Erro ao carregar dados de Manutenção';
-        errorElement.style.display = 'block';
-      })
-      .finally(() => {
-        loadingOverlay.style.display = 'none';
-      });
-  }
-
-  // Atualiza estatísticas gerais
-  function atualizarEstatisticas(stats) {
-    totalManutencoesSpan.textContent = stats.total_manutencoes || 0;
-    altaPrioridadeSpan.textContent = stats.alta_prioridade || 0;
-    pendentesSpan.textContent = stats.pendentes || 0;
-    concluidasSpan.textContent = stats.concluidas || 0;
-  }
-
-  // Destroi gráficos existentes
-  function destruirGraficos() {
-    Object.values(charts).forEach(chart => {
-      if (chart) chart.destroy();
-    });
-    charts = {};
-  }
-
-  // Cria todos os gráficos
-  function criarGraficos(data) {
-    destruirGraficos();
-
-    // Gráfico de Prioridades
-    if (data.prioridades && data.prioridades.labels.length > 0) {
-      charts.prioridades = new Chart(document.getElementById('chart-prioridades'), {
-        type: 'pie',
-        data: {
-          labels: data.prioridades.labels,
-          datasets: [{
-            data: data.prioridades.values,
-            backgroundColor: ['#e74c3c', '#f39c12', '#2ecc71'].slice(0, data.prioridades.labels.length)
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'bottom'
-            }
-          }
-        }
-      });
-    }
-
-    // Gráfico de Status
-    if (data.status && data.status.labels.length > 0) {
-      charts.status = new Chart(document.getElementById('chart-status'), {
-        type: 'doughnut',
-        data: {
-          labels: data.status.labels,
-          datasets: [{
-            data: data.status.values,
-            backgroundColor: colors.slice(0, data.status.labels.length)
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'bottom'
-            }
-          }
-        }
-      });
-    }
-
-    // Gráfico de Responsáveis
-    if (data.responsaveis && data.responsaveis.labels.length > 0) {
-      charts.responsaveis = new Chart(document.getElementById('chart-responsaveis'), {
-        type: 'bar',
-        data: {
-          labels: data.responsaveis.labels,
-          datasets: [{
-            label: 'Quantidade de Manutenções',
-            data: data.responsaveis.values,
-            backgroundColor: '#3498db'
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            y: {
-              beginAtZero: true
-            }
-          }
-        }
-      });
-    }
-
-    // Gráfico de Categorias
-    if (data.categorias && data.categorias.labels.length > 0) {
-      charts.categorias = new Chart(document.getElementById('chart-categorias'), {
-        type: 'bar',
-        data: {
-          labels: data.categorias.labels,
-          datasets: [{
-            label: 'Quantidade de Manutenções',
-            data: data.categorias.values,
-            backgroundColor: '#9b59b6'
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          indexAxis: 'y', // Barras horizontais
-          scales: {
-            x: {
-              beginAtZero: true
-            }
-          }
-        }
-      });
-    }
-  }
-
-  // Event listeners
-  btnRefresh.addEventListener('click', carregarDadosManutencao);
-
-  // Carrega dados iniciais
-  carregarDadosManutencao();
-});
-</script>
-{% endblock %}
-    """,
-    "admin/admin_layout.html": """
-{% extends "layout.html" %}
-{% block content %}
-<div class="row">
-    <div class="col-md-3">
-        <div class="list-group">
-            <a href="{{ url_for('admin_dashboard') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'admin_dashboard' %}active{% endif %}">Visão Geral</a>
-            <a href="{{ url_for('admin_users') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'admin_users' %}active{% endif %}">Gerenciar Usuários</a>
-            <a href="{{ url_for('admin_companies') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'admin_companies' %}active{% endif %}">Gerenciar Empresas</a>
-            <a href="{{ url_for('admin_profiles') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'admin_profiles' %}active{% endif %}">Gerenciar Perfis</a>
-        </div>
-    </div>
-    <div class="col-md-9">
-        {% block admin_content %}{% endblock %}
-    </div>
-</div>
-{% endblock %}
-    """,
-    "admin/admin_dashboard.html": """
-{% extends "admin/admin_layout.html" %}
-{% block title %}Admin Dashboard{% endblock %}
-{% block admin_content %}
-<h3>Visão Geral da Plataforma</h3>
-<div class="row">
-    <div class="col-md-4">
-        <div class="card text-center">
-            <div class="card-body">
-                <h5 class="card-title">Usuários Totais</h5>
-                <p class="card-text fs-2">{{ stats.total_users }}</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card text-center">
-            <div class="card-body">
-                <h5 class="card-title">Empresas Cadastradas</h5>
-                <p class="card-text fs-2">{{ stats.total_companies }}</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card text-center">
-            <div class="card-body">
-                <h5 class="card-title">Perfis de Acesso</h5>
-                <p class="card-text fs-2">{{ stats.total_profiles }}</p>
-            </div>
-        </div>
-    </div>
-</div>
-{% endblock %}
-    """,
-    "admin/admin_users.html": """
-{% extends "admin/admin_layout.html" %}
-{% block title %}Gerenciar Usuários{% endblock %}
-{% block admin_content %}
-<h3>Gerenciar Usuários</h3>
-<div class="card">
-    <div class="card-body">
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Usuário</th>
-                    <th>Email</th>
-                    <th>Empresa</th>
-                    <th>Perfil</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for user in users %}
-                <tr>
-                    <form method="POST" action="{{ url_for('admin_update_user', user_id=user.id) }}">
-                        <td>{{ user.id }}</td>
-                        <td>{{ user.username }} {% if user.is_super_admin %}<span class="badge bg-primary">Admin</span>{% endif %}</td>
-                        <td>{{ user.email }}</td>
-                        <td>
-                            <select name="company_id" class="form-select">
-                                <option value="">Nenhuma</option>
-                                {% for company in companies %}
-                                <option value="{{ company.id }}" {% if user.company_id == company.id %}selected{% endif %}>{{ company.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </td>
-                        <td>
-                            <select name="profile_id" class="form-select">
-                                <option value="">Nenhum</option>
-                                {% for profile in profiles %}
-                                <option value="{{ profile.id }}" {% if user.profile_id == profile.id %}selected{% endif %}>{{ profile.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </td>
-                        <td>
-                            <button type="submit" class="btn btn-success btn-sm">Salvar</button>
-                    </form>
-                    <form method="POST" action="{{ url_for('admin_delete_user', user_id=user.id) }}" onsubmit="return confirm('Tem certeza que deseja deletar este usuário?');" style="display:inline;">
-                        <button type="submit" class="btn btn-danger btn-sm" {% if user.is_super_admin %}disabled{% endif %}>Deletar</button>
-                    </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
-{% endblock %}
-    """,
-    "admin/admin_companies.html": """
-{% extends "admin/admin_layout.html" %}
-{% block title %}Gerenciar Empresas{% endblock %}
-{% block admin_content %}
-<h3>Gerenciar Empresas</h3>
-<div class="card mb-4">
-    <div class="card-body">
-        <h5 class="card-title">Adicionar Nova Empresa</h5>
-        <form method="POST">
-            <div class="input-group">
-                <input type="text" name="name" class="form-control" placeholder="Nome da nova empresa" required>
-                <button class="btn btn-primary" type="submit">Adicionar</button>
-            </div>
-        </form>
-    </div>
-</div>
-<div class="card">
-    <div class="card-body">
-        <h5 class="card-title">Empresas Cadastradas</h5>
-        <ul class="list-group">
-            {% for company in companies %}
-            <li class="list-group-item">{{ company.name }}</li>
-            {% endfor %}
-        </ul>
-    </div>
-</div>
-{% endblock %}
-    """,
-    "admin/admin_profiles.html": """
-{% extends "admin/admin_layout.html" %}
-{% block title %}Gerenciar Perfis{% endblock %}
-{% block admin_content %}
-<h3>Gerenciar Perfis de Acesso</h3>
-<div class="card mb-4">
-    <div class="card-body">
-        <h5 class="card-title">Adicionar Novo Perfil</h5>
-        <form method="POST">
-            <div class="mb-3">
-                <label for="name" class="form-label">Nome do Perfil</label>
-                <input type="text" name="name" id="name" class="form-control" placeholder="Ex: Diretor Financeiro" required>
-            </div>
-            <div class="mb-3">
-                <label for="report_url" class="form-label">URL Pública do Relatório Power BI</label>
-                <input type="url" name="report_url" id="report_url" class="form-control" placeholder="Cole a URL pública aqui" required>
-            </div>
-            <button class="btn btn-primary" type="submit">Adicionar Perfil</button>
-        </form>
-    </div>
-</div>
-<div class="card">
-    <div class="card-body">
-        <h5 class="card-title">Perfis Cadastrados</h5>
-        <table class="table">
-            <thead>
-                <tr><th>Nome do Perfil</th><th>URL do Relatório</th></tr>
-            </thead>
-            <tbody>
-                {% for profile in profiles %}
-                <tr><td>{{ profile.name }}</td><td><a href="{{ profile.report_url }}" target="_blank">Link</a></td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
-{% endblock %}
-    """
+    # ... (mantenha os outros templates originais, mas adicione as classes de estilo conforme o layout.html)
 }
 
 # Configura o loader de templates personalizado
@@ -2296,7 +577,7 @@ def api_imoveis_graficos():
         app.logger.error(f"Erro ao gerar dados para gráficos do mapa: {e}")
         return jsonify({'error': 'Erro ao gerar dados para gráficos'}), 500
 
-# --- NOVA ROTA PARA CONTRATOS ---
+# --- ROTA PARA CONTRATOS ---
 @app.route('/contratos')
 @login_required
 def contratos():
@@ -2353,7 +634,7 @@ def api_contratos():
         app.logger.error(f"Erro inesperado na api_contratos: {e}")
         return jsonify({'error': 'Erro interno no servidor ao processar contratos'}), 500
 
-# --- NOVA ROTA PARA GRÁFICOS ---
+# --- ROTA PARA GRÁFICOS ---
 @app.route('/graficos')
 @login_required
 def graficos():
@@ -2504,7 +785,7 @@ def api_graficos():
         app.logger.error(f"Erro inesperado na api_graficos: {e}")
         return jsonify({'error': 'Erro interno no servidor ao processar dados para gráficos'}), 500
 
-# --- NOVA ROTA PARA LEADS ---
+# --- ROTA PARA LEADS ---
 @app.route('/leads')
 @login_required
 def leads():
@@ -2599,7 +880,7 @@ def api_leads():
         app.logger.error(f"Erro inesperado na api_leads: {e}")
         return jsonify({'error': 'Erro interno no servidor ao processar dados de Leads'}), 500
 
-# --- NOVA ROTA PARA MANUTENÇÃO ---
+# --- ROTA PARA MANUTENÇÃO ---
 @app.route('/manutencao')
 @login_required
 def manutencao():
@@ -2766,5 +1047,3 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run(debug=True)
-
-
