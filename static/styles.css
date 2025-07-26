@@ -1,0 +1,107 @@
+/* Definição das cores principais */
+:root {
+    --dark-blue: #0a192f;
+    --light-blue: #1e3a5f;
+    --orange: #f9a826;
+    --text-color: #ccd6f6;
+    --light-text: #8892b0;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--dark-blue);
+    color: var(--text-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.container {
+    width: 100%;
+    max-width: 400px;
+    padding: 20px;
+}
+
+.login-box, .admin-panel {
+    background-color: var(--light-blue);
+    padding: 40px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    text-align: center;
+}
+
+h1 {
+    color: var(--orange);
+    margin-bottom: 10px;
+}
+
+p {
+    color: var(--light-text);
+    margin-bottom: 30px;
+}
+
+.input-group {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 14px;
+    color: var(--text-color);
+}
+
+.input-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #304a6d;
+    border-radius: 4px;
+    background-color: var(--dark-blue);
+    color: var(--text-color);
+    box-sizing: border-box; /* Garante que o padding não afete a largura total */
+}
+
+.btn {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 4px;
+    background-color: var(--orange);
+    color: var(--dark-blue);
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    box-sizing: border-box;
+    transition: background-color 0.3s ease;
+}
+
+.btn:hover {
+    background-color: #fbc02d;
+}
+
+.btn-logout {
+    margin-top: 20px;
+    background-color: #4a5b74;
+    color: var(--text-color);
+}
+
+.btn-logout:hover {
+    background-color: #5a6c84;
+}
+
+/* Estilos para as mensagens flash */
+.alert {
+    padding: 10px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+    font-size: 14px;
+}
+.alert-success { background-color: #28a745; color: white; }
+.alert-danger { background-color: #dc3545; color: white; }
+.alert-warning { background-color: #ffc107; color: #212529; }
+.alert-info { background-color: #17a2b8; color: white; }

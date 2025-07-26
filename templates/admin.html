@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bem-vindo ao Portal</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="admin-panel">
+            <h1>Seja bem vindo, {{ username }}!</h1>
+            <p>Esta é a sua área de administração de acessos.</p>
+            <p>A partir daqui, pode gerir as permissões e utilizadores do sistema.</p>
+            <a href="{{ url_for('logout') }}" class="btn btn-logout">Sair</a>
+        </div>
+    </div>
+</body>
+</html>
