@@ -5,8 +5,10 @@
         "descricao": "123",
         "criado_por": "admin",
         "data_criacao": "26/07/2025 17:59",
-        "status": "Aberto",
-        "notas": []
+        "status": "Em Andamento",
+        "notas": [
+            "Status alterado para 'Em Andamento' por adminti em 27/07/2025 17:14."
+        ]
     },
     {
         "id": 2,
