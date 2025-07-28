@@ -1,5 +1,5 @@
-# Usar a imagem base oficial do Python
-FROM python:3.13-slim
+# Usar a imagem base oficial do Python (versão estável)
+FROM python:3.11-slim
 
 # Definir o diretório de trabalho dentro do contentor
 WORKDIR /app
@@ -17,5 +17,4 @@ COPY . .
 EXPOSE 8000
 
 # O comando para executar a aplicação quando o contentor arrancar
-# Usamos 4 workers para um bom desempenho
 CMD ["gunicorn", "--workers", "4", "--bind", "0.0.0.0:8000", "app:app"]
