@@ -1,16 +1,17 @@
 # Ficheiro de configuração para o AWS App Runner
 version: 1.0
-runtime: python3.11 # Ou a versão do Python que preferir, ex: python3.12
+# Especifica a versão do Python. Vamos usar a 3.11 que é estável e suportada.
+runtime: python3.11
 
 build:
   commands:
-    # Instala as dependências listadas no requirements.txt
+    # O comando de build que será executado.
+    # Este comando instala as dependências do seu projeto.
     build:
       - pip install -r requirements.txt
 
-# Comando para iniciar a aplicação
 run:
-  # Usa o Gunicorn para executar a aplicação criada pela função create_app() no pacote 'app'
+  # O comando que inicia a sua aplicação web.
   command: gunicorn --workers 4 --bind 0.0.0.0:8080 "app:create_app()"
-  # A porta que o Gunicorn vai usar. O App Runner encaminha o tráfego para esta porta.
+  # A porta em que a sua aplicação vai escutar.
   port: 8080
