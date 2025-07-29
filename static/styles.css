@@ -87,8 +87,10 @@ body {
 }
 
 .logo {
-    /* Tamanho final da logo do login (aumentado novamente) */
-    width: 200px; 
+    /* Tamanho final da logo do login (dobrado de 200px para 400px) */
+    /* Limitado pela largura máxima do formulário para não quebrar o layout */
+    width: 100%;
+    max-width: 400px; 
     height: auto;
     margin-bottom: 15px;
 }
