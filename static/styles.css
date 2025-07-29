@@ -1,79 +1,17 @@
-/* === GERAL E VARIÁVEIS === */
+/* === 1. GERAL E VARIÁVEIS === */
 :root {
     --dark-blue: #0a192f;
     --medium-blue: #1e3a5f;
     --light-blue: #304a6d;
     --orange: #f9a826;
+    --highlight-orange: #fd7e14; /* Laranja mais vibrante para destaque */
     --text-primary: #ccd6f6;
     --text-secondary: #8892b0;
     --background-content: #0e203e;
     --border-color: #2a4365;
     --ti-orange: #ff6f00;
-}
-
-/* === LOADING STATES === */
-.loading-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-    display: none;
-}
-
-.loading-spinner {
-    width: 50px;
-    height: 50px;
-    border: 5px solid var(--light-blue);
-    border-top: 5px solid var(--orange);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-.chart-loading {
-    position: relative;
-    min-height: 200px;
-}
-
-.chart-loading::after {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 30px;
-    height: 30px;
-    border: 3px solid var(--light-blue);
-    border-top: 3px solid var(--orange);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-.button-spinner {
-    display: inline-block;
-    width: 12px;
-    height: 12px;
-    border: 2px solid rgba(255,255,255,0.3);
-    border-radius: 50%;
-    border-top-color: white;
-    animation: spin 1s ease-in-out infinite;
-    margin-right: 5px;
-}
-
-.btn-login:disabled,
-.btn-submit-ti:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
+    --success-green: #28a745;
+    --critical-red: #dc3545;
 }
 
 body {
@@ -82,9 +20,33 @@ body {
     color: var(--text-primary);
     margin: 0;
     font-size: 16px;
+    line-height: 1.5;
 }
 
-/* === PÁGINA DE LOGIN === */
+/* === 2. ESTADOS DE LOADING E SPINNERS === */
+.loading-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: none; justify-content: center; align-items: center;
+    z-index: 9999; flex-direction: column;
+}
+.loading-spinner {
+    width: 50px; height: 50px;
+    border: 5px solid var(--light-blue);
+    border-top: 5px solid var(--orange);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+.button-spinner {
+    display: inline-block; width: 12px; height: 12px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 50%; border-top-color: white;
+    animation: spin 1s ease-in-out infinite;
+    margin-right: 8px;
+}
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+/* === 3. PÁGINA DE LOGIN === */
 .login-container { display: flex; justify-content: center; align-items: center; height: 100vh; padding: 20px; }
 .login-form { width: 100%; max-width: 380px; padding: 40px; background-color: var(--medium-blue); border-radius: 8px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); text-align: center; border: 1px solid var(--border-color); }
 .logo { width: 100px; height: auto; margin-bottom: 15px; }
@@ -95,10 +57,12 @@ body {
 .login-form input::placeholder { color: var(--text-secondary); }
 .btn-login { width: 100%; padding: 12px; border: none; border-radius: 5px; background-color: var(--orange); color: var(--dark-blue); font-weight: bold; font-size: 16px; cursor: pointer; transition: background-color 0.3s ease; }
 .btn-login:hover { background-color: #ffc107; }
+.btn-login:disabled { opacity: 0.7; cursor: not-allowed; }
 
-/* === PAINEL DE ADMINISTRAÇÃO (DASHBOARD) === */
-.dashboard-container { display: flex; height: 100vh; }
-.sidebar { width: 240px; background-color: var(--dark-blue); display: flex; flex-direction: column; border-right: 1px solid var(--border-color); padding: 20px; box-sizing: border-box; }
+/* === 4. LAYOUT DO DASHBOARD (SIDEBAR E CONTEÚDO PRINCIPAL) === */
+.dashboard-container { display: flex; min-height: 100vh; }
+.sidebar { width: 240px; background-color: var(--dark-blue); display: flex; flex-direction: column; border-right: 1px solid var(--border-color); padding: 20px; box-sizing: border-box; position: fixed; height: 100%; }
+.main-content { flex-grow: 1; background-color: var(--background-content); padding: 30px; overflow-y: auto; margin-left: 240px; }
 .sidebar-header { text-align: center; margin-bottom: 30px; }
 .sidebar-logo { width: 60px; margin-bottom: 10px; }
 .sidebar-header h3 { color: var(--orange); margin: 0; font-size: 18px; }
@@ -111,370 +75,79 @@ body {
 .user-info { color: var(--text-secondary); font-size: 14px; }
 .user-info .username { display: block; margin-bottom: 10px; }
 .logout-link { color: var(--orange); text-decoration: none; font-weight: bold; }
-.logout-link:hover { text-decoration: underline; }
-.main-content { flex-grow: 1; background-color: var(--background-content); padding: 30px; overflow-y: auto; }
-.main-header h1 { color: var(--text-primary); margin-top: 0; border-bottom: 2px solid var(--orange); padding-bottom: 15px; }
+.main-header h1 { color: var(--text-primary); margin-top: 0; border-bottom: 2px solid var(--orange); padding-bottom: 15px; margin-bottom: 30px; }
 
-/* === PÁGINA DO MAPA === */
-#map {
-    height: 75vh;
-    width: 100%;
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-    background-color: var(--light-blue);
-}
-
-/* === PÁGINA DE CHAMADOS DE TI - ESTILOS COMBINADOS === */
-.indicators-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 20px;
-    margin-bottom: 30px;
-}
+/* === 5. COMPONENTES COMUNS (CARDS, GRIDS, ALERTAS) === */
+.indicators-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
 .indicator-card { background-color: var(--medium-blue); padding: 20px; border-radius: 8px; text-align: center; border: 1px solid var(--border-color); }
 .indicator-card h3 { margin: 0 0 10px 0; font-size: 16px; color: var(--text-secondary); font-weight: 400; }
 .indicator-value { margin: 0; font-size: 36px; font-weight: 700; color: var(--orange); }
-.charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
-.chart-card { background-color: var(--medium-blue); padding: 20px; border-radius: 8px; height: 350px; }
-.chart-card h3 { margin-top: 0; text-align: center; color: var(--text-primary); }
+.charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px; }
+.chart-card { background-color: var(--medium-blue); padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); }
+.chart-card h3 { margin-top: 0; text-align: center; color: var(--text-primary); margin-bottom: 20px; }
 .chart-full-width { grid-column: 1 / -1; }
+.chart-container { position: relative; height: 250px; width: 100%; }
+.alert { padding: 1rem; margin-bottom: 1rem; border-radius: 5px; border: 1px solid transparent; }
+.alert-success { color: #d4edda; background-color: #155724; border-color: #c3e6cb; }
+.alert-danger { color: #f8d7da; background-color: #721c24; border-color: #f5c6cb; }
+.alert-info { color: #d1ecf1; background-color: #0c5460; border-color: #bee5eb; }
 
-/* === ESTILOS PARA O SISTEMA KANBAN === */
-.form-row {
-    display: flex;
-    gap: 15px;
-    margin-bottom: 15px;
-}
+/* === 6. FORMULÁRIOS DE CRIAÇÃO (TAREFA E CHAMADO) === */
+.form-container { background-color: var(--medium-blue); padding: 2rem; border-radius: 8px; margin-top: 2rem; border: 1px solid var(--border-color); }
+.form-container h3 { margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 1.5rem; }
+.creation-form { display: flex; flex-direction: column; gap: 1rem; }
+.form-group, .form-group-inline { display: flex; gap: 1.5rem; }
+.form-group { flex-direction: column; }
+.form-group-inline { flex-direction: row; align-items: flex-end; }
+.form-subgroup { display: flex; flex-direction: column; flex: 1; }
+.form-group label { margin-bottom: 0.5rem; font-weight: 500; color: var(--text-secondary); font-size: 0.875rem; }
+.form-input, .form-select, .form-textarea { width: 100%; padding: 12px 15px; border: 1px solid var(--light-blue); border-radius: 5px; background-color: var(--dark-blue); color: var(--text-primary); box-sizing: border-box; font-size: 16px; }
+.form-textarea { resize: vertical; min-height: 80px; }
+.form-actions { display: flex; justify-content: flex-end; margin-top: 1rem; }
+.btn-submit-ti { background-color: var(--orange); color: var(--dark-blue); border: none; padding: 0.75rem 1.5rem; border-radius: 5px; cursor: pointer; font-weight: 700; transition: background-color 0.3s; }
+.btn-submit-ti:hover { background-color: #ffc107; }
+.btn-submit-ti:disabled { opacity: 0.7; cursor: not-allowed; }
 
-.form-row .form-input,
-.form-row .form-select {
-    flex: 1;
-}
+/* === 7. KANBAN BOARD (COLUNAS E CARDS) === */
+.kanban-board { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; margin-top: 2rem; }
+.kanban-column { background-color: var(--dark-blue); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); }
+.column-title { margin-top: 0; padding-bottom: 1rem; border-bottom: 2px solid var(--border-color); }
+.tasks-container, .tickets-container { min-height: 200px; padding-top: 1rem; }
+.task-card { background-color: var(--medium-blue); border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; margin-bottom: 15px; cursor: grab; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.task-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); }
+.task-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; gap: 10px; }
+.task-header h4 { margin: 0; color: var(--text-primary); font-size: 16px; flex: 1; }
+.priority-badge { padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; text-transform: uppercase; white-space: nowrap; }
+.priority-baixa { background-color: var(--success-green); color: white; }
+.priority-média { background-color: #ffc107; color: var(--dark-blue); }
+.priority-alta { background-color: var(--highlight-orange); color: white; }
+.priority-crítica { background-color: var(--critical-red); color: white; }
+.task-desc { color: var(--text-secondary); margin-bottom: 15px; font-size: 14px; line-height: 1.4; }
+.task-footer { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-secondary); }
+.task-responsible { font-weight: bold; color: var(--orange); }
+.task-notes { margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border-color); }
+.task-notes h5 { margin: 0 0 10px 0; color: var(--text-primary); font-size: 14px; }
+.task-notes ul { margin: 0; padding-left: 20px; }
+.task-notes li { color: var(--text-secondary); font-size: 12px; margin-bottom: 5px; }
+.no-tasks { color: var(--text-secondary); font-style: italic; text-align: center; padding: 20px; }
+.sortable-ghost { opacity: 0.4; background: var(--light-blue); }
 
-.form-select {
-    padding: 12px 15px;
-    border: 1px solid var(--light-blue);
-    border-radius: 5px;
-    background-color: var(--dark-blue);
-    color: var(--text-primary);
-    font-size: 16px;
-    cursor: pointer;
-}
+/* === 8. COMPONENTES ESPECÍFICOS (KPI, MAPA) === */
+.kpi-card-large { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; padding: 1rem; }
+.kpi-value { font-size: 3rem; font-weight: 700; color: var(--orange); margin: 0; }
+.kpi-label { font-size: 1rem; color: var(--text-secondary); margin: 0; }
+#map { height: 75vh; width: 100%; border-radius: 8px; border: 1px solid var(--border-color); background-color: var(--light-blue); }
 
-.form-select option {
-    background-color: var(--dark-blue);
-    color: var(--text-primary);
-}
-
-.task-card {
-    background-color: var(--medium-blue);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 15px;
-    margin-bottom: 15px;
-    cursor: move;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.task-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-.task-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 10px;
-}
-
-.task-header h4 {
-    margin: 0;
-    color: var(--text-primary);
-    font-size: 16px;
-    flex: 1;
-}
-
-.priority-badge {
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 12px;
-    font-weight: bold;
-    text-transform: uppercase;
-}
-
-.priority-baixa {
-    background-color: #28a745;
-    color: white;
-}
-
-.priority-média {
-    background-color: #ffc107;
-    color: var(--dark-blue);
-}
-
-.priority-alta {
-    background-color: #fd7e14;
-    color: white;
-}
-
-.priority-crítica {
-    background-color: #dc3545;
-    color: white;
-}
-
-.task-desc {
-    color: var(--text-secondary);
-    margin-bottom: 15px;
-    font-size: 14px;
-    line-height: 1.4;
-}
-
-.task-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 12px;
-    color: var(--text-secondary);
-    margin-bottom: 10px;
-}
-
-.task-responsible {
-    font-weight: bold;
-    color: var(--orange);
-}
-
-.task-date {
-    font-style: italic;
-}
-
-.task-notes {
-    margin-top: 15px;
-    padding-top: 15px;
-    border-top: 1px solid var(--border-color);
-}
-
-.task-notes h5 {
-    margin: 0 0 10px 0;
-    color: var(--text-primary);
-    font-size: 14px;
-}
-
-.task-notes ul {
-    margin: 0;
-    padding-left: 20px;
-}
-
-.task-notes li {
-    color: var(--text-secondary);
-    font-size: 12px;
-    margin-bottom: 5px;
-}
-
-.task-actions {
-    margin-top: 15px;
-    padding-top: 15px;
-    border-top: 1px solid var(--border-color);
-}
-
-.note-form {
-    display: flex;
-    gap: 10px;
-}
-
-.note-form input {
-    flex: 1;
-    padding: 8px 12px;
-    border: 1px solid var(--light-blue);
-    border-radius: 4px;
-    background-color: var(--dark-blue);
-    color: var(--text-primary);
-    font-size: 14px;
-}
-
-.note-form button {
-    padding: 8px 15px;
-    border: none;
-    border-radius: 4px;
-    background-color: var(--orange);
-    color: var(--dark-blue);
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-.note-form button:hover {
-    background-color: #ffc107;
-}
-
-.no-tasks {
-    color: var(--text-secondary);
-    font-style: italic;
-    text-align: center;
-    padding: 20px;
-}
-
-/* Estilos para drag and drop */
-.sortable-ghost {
-    opacity: 0.4;
-}
-
-.sortable-chosen {
-    transform: rotate(5deg);
-}
-
-.sortable-drag {
-    transform: rotate(5deg);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
-}
-
-.tasks-container {
-    min-height: 200px;
-    padding: 10px;
-    border-radius: 8px;
-    background-color: rgba(30, 58, 95, 0.3);
-}
-
-/* Responsividade para o Kanban */
+/* === 9. RESPONSIVIDADE === */
 @media (max-width: 1200px) {
-    .kanban-board {
-        grid-template-columns: repeat(2, 1fr);
-    }
+    .charts-grid { grid-template-columns: 1fr; }
 }
-
+@media (max-width: 992px) {
+    .sidebar { position: static; width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--border-color); }
+    .main-content { margin-left: 0; }
+}
 @media (max-width: 768px) {
-    .kanban-board {
-        grid-template-columns: 1fr;
-    }
-    
-    .form-row {
-        flex-direction: column;
-    }
-    
-    .charts-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-/* === ESTILOS PARA A PÁGINA DO MAPA === */
-.filters-section {
-    background-color: var(--medium-blue);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 20px;
-}
-
-.filters-section h3 {
-    color: var(--text-primary);
-    margin: 0 0 15px 0;
-    font-size: 18px;
-}
-
-.filters-container {
-    display: flex;
-    gap: 20px;
-    align-items: end;
-    flex-wrap: wrap;
-}
-
-.filter-group {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
-.filter-group label {
-    color: var(--text-secondary);
-    font-size: 14px;
-    font-weight: 500;
-}
-
-.filter-group select {
-    padding: 8px 12px;
-    border: 1px solid var(--light-blue);
-    border-radius: 4px;
-    background-color: var(--dark-blue);
-    color: var(--text-primary);
-    font-size: 14px;
-    min-width: 150px;
-    cursor: pointer;
-}
-
-.filter-group select option {
-    background-color: var(--dark-blue);
-    color: var(--text-primary);
-}
-
-.btn-apply-filters,
-.btn-clear-filters {
-    padding: 8px 16px;
-    border: none;
-    border-radius: 4px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    font-size: 14px;
-}
-
-.btn-apply-filters {
-    background-color: var(--orange);
-    color: var(--dark-blue);
-}
-
-.btn-apply-filters:hover {
-    background-color: #ffc107;
-}
-
-.btn-clear-filters {
-    background-color: var(--text-secondary);
-    color: var(--dark-blue);
-}
-
-.btn-clear-filters:hover {
-    background-color: #a0aec0;
-}
-
-/* Estilos para popups do mapa */
-.property-popup {
-    font-family: 'Roboto', sans-serif;
-    max-width: 250px;
-}
-
-.property-popup h4 {
-    margin: 0 0 10px 0;
-    color: var(--dark-blue);
-    font-size: 16px;
-}
-
-.property-popup p {
-    margin: 5px 0;
-    font-size: 14px;
-    color: var(--dark-blue);
-}
-
-.property-popup strong {
-    font-weight: 600;
-}
-
-/* Responsividade para filtros */
-@media (max-width: 768px) {
-    .filters-container {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    
-    .filter-group {
-        width: 100%;
-    }
-    
-    .filter-group select {
-        min-width: 100%;
-    }
-    
-    .btn-apply-filters,
-    .btn-clear-filters {
-        width: 100%;
-        margin-top: 10px;
-    }
+    .main-content { padding: 15px; }
+    .form-group-inline { flex-direction: column; align-items: stretch; gap: 1rem; }
+    .kanban-board { grid-template-columns: 1fr; }
 }

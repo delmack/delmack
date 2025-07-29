@@ -1,280 +1,116 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chamados de TI - Baggio Portal</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
-<body>
-    {% include 'loading.html' %}
-    <div class="dashboard-container">
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <img src="{{ url_for('static', filename='baggio-logo.png') }}" alt="Logo Baggio" class="sidebar-logo">
-                <h3>BAGGIO PORTAL</h3>
+{% extends "base.html" %}
+{% block title %}Chamados de TI - Baggio Portal{% endblock %}
+{% block styles %}
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<header class="main-header"><h1>Central de Suporte de TI</h1></header>
+
+{% with messages = get_flashed_messages(with_categories=true ) %}
+  {% if messages %}{% for category, message in messages %}
+    <div class="alert alert-{{ category }}">{{ message }}</div>
+  {% endfor %}{% endif %}
+{% endwith %}
+
+<section class="indicators-grid">
+    <div class="indicator-card"><h3>Total de Chamados</h3><p class="indicator-value">{{ total_tickets }}</p></div>
+    <div class="indicator-card"><h3>Abertos</h3><p class="indicator-value">{{ status_counts.get('Aberto', 0) }}</p></div>
+    <div class="indicator-card"><h3>Em Andamento</h3><p class="indicator-value">{{ status_counts.get('Em Andamento', 0) }}</p></div>
+    <div class="indicator-card"><h3>Concluídos</h3><p class="indicator-value">{{ status_counts.get('Concluído', 0) }}</p></div>
+</section>
+
+<!-- FORMULÁRIO CORRIGIDO E COM PRIORIDADE -->
+<div class="form-container">
+    <h3>Criar Novo Chamado</h3>
+    <form action="{{ url_for('novo_chamado') }}" method="post" class="creation-form">
+        <div class="form-group-inline">
+            <div class="form-subgroup" style="flex-grow: 3;">
+                <label for="titulo-chamado">Título do Chamado</label>
+                <input type="text" id="titulo-chamado" name="titulo" placeholder="Ex: Impressora não funciona" required class="form-input">
             </div>
-            <nav class="sidebar-nav">
-                <a href="{{ url_for('admin_portal') }}" class="nav-item">PAINEL</a>
-                <a href="{{ url_for('pagina_menu', pagina='usuarios') }}" class="nav-item">USUÁRIOS</a>
-                <a href="{{ url_for('pagina_menu', pagina='imoveis') }}" class="nav-item">IMÓVEIS</a>
-                <a href="{{ url_for('mapa') }}" class="nav-item">MAPA</a>
-                <a href="{{ url_for('pagina_menu', pagina='contratos') }}" class="nav-item">CONTRATOS</a>
-                <a href="{{ url_for('pagina_menu', pagina='manutencao') }}" class="nav-item">MANUTENÇÃO</a>
-                <a href="{{ url_for('pagina_menu', pagina='pessoas') }}" class="nav-item">PESSOAS</a>
-                <a href="{{ url_for('pagina_menu', pagina='financeiro') }}" class="nav-item">FINANCEIRO</a>
-                <a href="{{ url_for('pagina_menu', pagina='imobiliaria') }}" class="nav-item">IMOBILIÁRIA</a>
-                <a href="{{ url_for('pagina_menu', pagina='crm') }}" class="nav-item">CRM</a>
-                {% if session.get('role') == 'ti_admin' %}
-                <a href="{{ url_for('ti_kanban') }}" class="nav-item nav-item-ti">TI</a>
-                {% endif %}
-                <a href="{{ url_for('chamado_ti') }}" class="nav-item nav-item-ti active">CHAMADO TI</a>
-            </nav>
-            <div class="sidebar-footer">
-                <div class="user-info">
-                    <span class="username">Utilizador: {{ session.get('username') }}</span>
-                    <a href="{{ url_for('logout') }}" class="logout-link">Sair</a>
+            <div class="form-subgroup" style="flex-grow: 1;">
+                <label for="prioridade-chamado">Prioridade</label>
+                <select id="prioridade-chamado" name="prioridade" required class="form-select">
+                    <option value="Baixa" selected>Baixa</option>
+                    <option value="Média">Média</option>
+                    <option value="Alta">Alta</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="descricao-chamado">Descrição Detalhada do Problema</label>
+            <textarea id="descricao-chamado" name="descricao" placeholder="Descreva o que aconteceu, mensagens de erro, etc." required class="form-textarea" rows="3"></textarea>
+        </div>
+        <div class="form-actions"><button type="submit" class="btn-submit-ti">ABRIR CHAMADO</button></div>
+    </form>
+</div>
+
+<div class="kanban-board">
+    {% for status, tickets in board.items() %}
+    <div class="kanban-column">
+        <h3 class="column-title">{{ status }} ({{ tickets|length }})</h3>
+        <div class="tickets-container" data-status="{{ status }}">
+            {% for ticket in tickets %}
+            <div class="task-card" data-ticket-id="{{ ticket.id }}">
+                <div class="task-header">
+                    <h4>#{{ ticket.id }} - {{ ticket.titulo }}</h4>
+                    <!-- NOVO: Badge de Prioridade -->
+                    <span class="priority-badge priority-{{ (ticket.prioridade or 'baixa').lower() }}">{{ ticket.prioridade or 'Baixa' }}</span>
+                </div>
+                <p class="task-desc">{{ ticket.descricao }}</p>
+                <div class="task-footer">
+                    <span class="task-responsible"><strong>Por:</strong> {{ ticket.criado_por }}</span>
+                    <span class="task-date">{{ ticket.data_criacao }}</span>
                 </div>
             </div>
-        </aside>
-
-        <main class="main-content">
-            <header class="main-header">
-                <h1>Central de Suporte de TI</h1>
-            </header>
-
-            {% with messages = get_flashed_messages(with_categories=true) %}
-              {% if messages %}
-                {% for category, message in messages %}
-                  <div class="alert alert-{{ category }}">{{ message }}</div>
-                {% endfor %}
-              {% endif %}
-            {% endwith %}
-
-            <section class="indicators-grid" id="indicators-container">
-                <div class="indicator-card">
-                    <h3>Total de Chamados</h3>
-                    <p class="indicator-value">{{ total_tickets }}</p>
-                </div>
-                <div class="indicator-card">
-                    <h3>Abertos</h3>
-                    <p class="indicator-value">{{ status_counts.get('Aberto', 0) }}</p>
-                </div>
-                <div class="indicator-card">
-                    <h3>Em Andamento</h3>
-                    <p class="indicator-value">{{ status_counts.get('Em Andamento', 0) }}</p>
-                </div>
-                <div class="indicator-card">
-                    <h3>Concluídos</h3>
-                    <p class="indicator-value">{{ status_counts.get('Concluído', 0) }}</p>
-                </div>
-            </section>
-
-            <section class="charts-grid">
-                <div class="chart-card chart-loading">
-                    <h3>Status dos Chamados</h3>
-                    <canvas id="statusChart"></canvas>
-                </div>
-                <div class="chart-card chart-loading">
-                    <h3>Maiores Solicitantes</h3>
-                    <canvas id="creatorsChart"></canvas>
-                </div>
-                <div class="chart-card chart-full-width chart-loading">
-                    <h3>Volume Mensal de Chamados</h3>
-                    <canvas id="monthlyChart"></canvas>
-                </div>
-            </section>
-
-            <div class="form-container">
-                <h3>Criar Novo Chamado</h3>
-                <form action="{{ url_for('novo_chamado') }}" method="post" id="ticket-form">
-                    <input type="text" name="titulo" placeholder="Título do Chamado" required class="form-input">
-                    <textarea name="descricao" placeholder="Descreva o problema detalhadamente..." required class="form-textarea"></textarea>
-                    <button type="submit" class="btn-submit-ti" id="submit-btn">
-                        ABRIR CHAMADO
-                    </button>
-                </form>
-            </div>
-
-            <div class="kanban-board">
-                {% for status, tickets in board.items() %}
-                <div class="kanban-column">
-                    <h3 class="column-title">{{ status }}</h3>
-                    <div class="tickets-container" data-status="{{ status }}">
-                        {% for ticket in tickets %}
-                        <div class="ticket-card">
-                            <h4>#{{ ticket.id }} - {{ ticket.titulo }}</h4>
-                            <p class="ticket-desc">{{ ticket.descricao }}</p>
-                            <div class="ticket-footer">
-                                <span>Criado por: {{ ticket.criado_por }}</span>
-                                <span>{{ ticket.data_criacao }}</span>
-                            </div>
-                            
-                            {% if ticket.notas %}
-                            <div class="ticket-notes">
-                                <h5>Histórico:</h5>
-                                <ul>
-                                    {% for nota in ticket.notas %}
-                                    <li>{{ nota }}</li>
-                                    {% endfor %}
-                                </ul>
-                            </div>
-                            {% endif %}
-
-                            {% if user_role == 'ti_admin' %}
-                            <div class="admin-actions">
-                                <form action="{{ url_for('mover_chamado') }}" method="post" class="move-form">
-                                    <input type="hidden" name="ticket_id" value="{{ ticket.id }}">
-                                    <select name="novo_status" class="form-select" onchange="updateTicketStatus(this)">
-                                        <option value="" disabled selected>Mover para...</option>
-                                        {% if status != 'Aberto' %}<option value="Aberto">Aberto</option>{% endif %}
-                                        {% if status != 'Em Andamento' %}<option value="Em Andamento">Em Andamento</option>{% endif %}
-                                        {% if status != 'Concluído' %}<option value="Concluído">Concluído</option>{% endif %}
-                                    </select>
-                                </form>
-                                <form action="{{ url_for('add_nota_chamado') }}" method="post" class="note-form">
-                                    <input type="hidden" name="ticket_id" value="{{ ticket.id }}">
-                                    <input type="text" name="nota" placeholder="Adicionar nota..." required>
-                                    <button type="submit" class="btn-small">Salvar</button>
-                                </form>
-                            </div>
-                            {% endif %}
-                        </div>
-                        {% else %}
-                        <p class="no-tickets">Nenhum chamado nesta coluna.</p>
-                        {% endfor %}
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </main>
+            {% else %}<p class="no-tasks">Nenhum chamado.</p>{% endfor %}
+        </div>
     </div>
+    {% endfor %}
+</div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize charts
-            const statusChart = new Chart(
-                document.getElementById('statusChart'), 
-                {
-                    type: 'pie',
-                    data: {
-                        labels: {{ chart_status_labels|tojson }},
-                        datasets: [{
-                            data: {{ chart_status_data|tojson }},
-                            backgroundColor: ['#f9a826', '#1e3a5f', '#28a745']
-                        }]
-                    }
-                }
-            );
+<!-- GRÁFICOS ATUALIZADOS -->
+<section class="charts-grid" style="margin-top: 30px;">
+    <div class="chart-card"><h3>Status dos Chamados</h3><div class="chart-container"><canvas id="statusChart"></canvas></div></div>
+    <div class="chart-card"><h3>Maiores Solicitantes</h3><div class="chart-container"><canvas id="creatorsChart"></canvas></div></div>
+    <!-- NOVO: Gráfico de Tempo Médio Geral -->
+    <div class="chart-card">
+        <h3>Tempo Médio de Resolução</h3>
+        <div class="kpi-card-large">
+            <p class="kpi-value">{{ avg_time_geral }}</p>
+            <p class="kpi-label">Horas (Média)</p>
+        </div>
+    </div>
+</section>
+<section class="charts-grid" style="margin-top: 1.5rem;">
+    <div class="chart-card chart-full-width"><h3>Volume Mensal de Chamados</h3><div class="chart-container" style="height: 300px;"><canvas id="monthlyChart"></canvas></div></div>
+    <!-- NOVO: Gráfico de Tempo por Prioridade -->
+    <div class="chart-card chart-full-width"><h3>Tempo de Resolução por Prioridade (h)</h3><div class="chart-container" style="height: 300px;"><canvas id="timePriorityChart"></canvas></div></div>
+</section>
+{% endblock %}
 
-            const creatorsChart = new Chart(
-                document.getElementById('creatorsChart'), 
-                {
-                    type: 'doughnut',
-                    data: {
-                        labels: {{ chart_creators_labels|tojson }},
-                        datasets: [{
-                            data: {{ chart_creators_data|tojson }},
-                            backgroundColor: ['#f9a826', '#1e3a5f', '#28a745', '#8892b0']
-                        }]
-                    }
-                }
-            );
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Drag-and-Drop (sem alterações)
+    if ("{{ user_role }}" === "ti_admin") {
+        document.querySelectorAll('.tickets-container').forEach(c => new Sortable(c, { group: 'chamados', animation: 150, onEnd: (e) => {
+            fetch("{{ url_for('mover_chamado') }}", { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: `ticket_id=${e.item.dataset.ticketId}&novo_status=${e.to.dataset.status}`})
+            .then(r => r.json()).then(d => d.success && window.location.reload());
+        }}));
+    }
 
-            const monthlyChart = new Chart(
-                document.getElementById('monthlyChart'), 
-                {
-                    type: 'bar',
-                    data: {
-                        labels: {{ chart_monthly_labels|tojson }},
-                        datasets: [{
-                            label: 'Nº de Chamados',
-                            data: {{ chart_monthly_data|tojson }},
-                            backgroundColor: '#1e3a5f',
-                            borderColor: '#f9a826',
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        scales: {
-                            y: { beginAtZero: true }
-                        }
-                    }
-                }
-            );
+    const highlightColor = '#fd7e14';
+    const colorPalette = ['#1e3a5f', '#f9a826', '#28a745', '#8892b0', '#ffc107'];
+    const chartOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } };
 
-            // Remove loading classes
-            document.querySelectorAll('.chart-loading').forEach(el => {
-                el.classList.remove('chart-loading');
-            });
-
-            // Form submission
-            const ticketForm = document.getElementById('ticket-form');
-            const submitBtn = document.getElementById('submit-btn');
-            
-            ticketForm.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = `
-                    <span class="button-spinner"></span> PROCESSANDO...
-                `;
-                
-                try {
-                    const formData = new FormData(ticketForm);
-                    const response = await fetch(ticketForm.action, {
-                        method: 'POST',
-                        body: formData
-                    });
-                    
-                    if (!response.ok) throw new Error('Falha ao criar chamado');
-                    
-                    const result = await response.json();
-                    if (result.success) {
-                        window.location.reload();
-                    } else {
-                        throw new Error(result.message || 'Erro desconhecido');
-                    }
-                } catch (error) {
-                    alert('Erro: ' + error.message);
-                } finally {
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = 'ABRIR CHAMADO';
-                }
-            });
-
-            // Update ticket status
-            async function updateTicketStatus(selectElement) {
-                const form = selectElement.closest('form');
-                const ticketCard = form.closest('.ticket-card');
-                
-                showLoading();
-                
-                try {
-                    const formData = new FormData(form);
-                    const response = await fetch(form.action, {
-                        method: 'POST',
-                        body: formData
-                    });
-                    
-                    if (!response.ok) throw new Error('Falha ao atualizar status');
-                    
-                    const result = await response.json();
-                    if (result.success) {
-                        window.location.reload();
-                    } else {
-                        throw new Error(result.message || 'Erro desconhecido');
-                    }
-                } catch (error) {
-                    alert('Erro: ' + error.message);
-                    hideLoading();
-                }
-            }
-
-            // Make updateTicketStatus available globally
-            window.updateTicketStatus = updateTicketStatus;
-        });
-    </script>
-</body>
-</html>
+    new Chart(document.getElementById('statusChart'), { type: 'pie', data: { labels: {{ chart_status_labels|tojson }}, datasets: [{ data: {{ chart_status_data|tojson }}, backgroundColor: colorPalette }] }, options: chartOptions });
+    new Chart(document.getElementById('creatorsChart'), { type: 'doughnut', data: { labels: {{ chart_creators_labels|tojson }}, datasets: [{ data: {{ chart_creators_data|tojson }}, backgroundColor: colorPalette }] }, options: chartOptions });
+    new Chart(document.getElementById('monthlyChart'), { type: 'bar', data: { labels: {{ chart_monthly_labels|tojson }}, datasets: [{ label: 'Nº de Chamados', data: {{ chart_monthly_data|tojson }}, backgroundColor: highlightColor }] }, options: chartOptions });
+    
+    // NOVO: Renderização do gráfico de tempo por prioridade
+    new Chart(document.getElementById('timePriorityChart'), { type: 'bar', data: { labels: {{ chart_time_priority_labels|tojson }}, datasets: [{ label: 'Horas', data: {{ chart_time_priority_data|tojson }}, backgroundColor: colorPalette }] }, options: chartOptions });
+});
+</script>
+{% endblock %}

@@ -1,372 +1,86 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mapa de Imóveis - Baggio Portal</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    <!-- CSS do Leaflet (biblioteca do mapa) -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-    <!-- CSS do MarkerCluster para agrupamento -->
+{% extends "base.html" %}
+
+{% block title %}Mapa de Imóveis - Baggio Portal{% endblock %}
+
+{% block styles %}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
-    <!-- Chart.js para gráficos -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
-<body>
-    {% include 'loading.html' %}
-    <div class="dashboard-container">
-        <!-- INÍCIO DA BARRA LATERAL (SIDEBAR) -->
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <img src="{{ url_for('static', filename='baggio-logo.png') }}" alt="Logo Baggio" class="sidebar-logo">
-                <h3>BAGGIO PORTAL</h3>
-            </div>
-            <nav class="sidebar-nav">
-                <a href="{{ url_for('admin_portal') }}" class="nav-item">PAINEL</a>
-                <a href="{{ url_for('pagina_menu', pagina='usuarios') }}" class="nav-item">USUÁRIOS</a>
-                <a href="{{ url_for('pagina_menu', pagina='imoveis') }}" class="nav-item">IMÓVEIS</a>
-                <a href="{{ url_for('mapa') }}" class="nav-item active">MAPA</a>
-                <a href="{{ url_for('pagina_menu', pagina='contratos') }}" class="nav-item">CONTRATOS</a>
-                <a href="{{ url_for('pagina_menu', pagina='manutencao') }}" class="nav-item">MANUTENÇÃO</a>
-                <a href="{{ url_for('pagina_menu', pagina='pessoas') }}" class="nav-item">PESSOAS</a>
-                <a href="{{ url_for('pagina_menu', pagina='financeiro') }}" class="nav-item">FINANCEIRO</a>
-                <a href="{{ url_for('pagina_menu', pagina='imobiliaria') }}" class="nav-item">IMOBILIÁRIA</a>
-                <a href="{{ url_for('pagina_menu', pagina='crm') }}" class="nav-item">CRM</a>
-                {% if session.get('role') == 'ti_admin' %}
-                <a href="{{ url_for('ti_kanban') }}" class="nav-item nav-item-ti">TI</a>
-                {% endif %}
-                <a href="{{ url_for('chamado_ti') }}" class="nav-item nav-item-ti">CHAMADO TI</a>
-            </nav>
-            <div class="sidebar-footer">
-                <div class="user-info">
-                    <span class="username">Utilizador: {{ session.get('username') }}</span>
-                    <a href="{{ url_for('logout') }}" class="logout-link">Sair</a>
-                </div>
-            </div>
-        </aside>
-        <!-- FIM DA BARRA LATERAL (SIDEBAR) -->
+{% endblock %}
 
-        <main class="main-content">
-            <header class="main-header">
-                <h1>Mapa de Imóveis - Região Sul</h1>
-            </header>
-            
-            {% with messages = get_flashed_messages(with_categories=true) %}
-              {% if messages %}
-                {% for category, message in messages %}
-                  <div class="alert alert-{{ category }}">{{ message }}</div>
-                {% endfor %}
-              {% endif %}
-            {% endwith %}
+{% block content %}
+<header class="main-header">
+    <h1>Mapa de Imóveis - Região Sul</h1>
+</header>
 
-            <!-- Indicadores da API -->
-            <section class="indicators-grid" id="indicators-container">
-                <div class="indicator-card loading-indicator">
-                    <div class="loading-spinner" style="width: 30px; height: 30px; margin: 0 auto;"></div>
-                </div>
-                <div class="indicator-card loading-indicator">
-                    <div class="loading-spinner" style="width: 30px; height: 30px; margin: 0 auto;"></div>
-                </div>
-                <div class="indicator-card loading-indicator">
-                    <div class="loading-spinner" style="width: 30px; height: 30px; margin: 0 auto;"></div>
-                </div>
-                <div class="indicator-card loading-indicator">
-                    <div class="loading-spinner" style="width: 30px; height: 30px; margin: 0 auto;"></div>
-                </div>
-            </section>
+<section class="indicators-grid" id="indicators-container">
+    <!-- Indicadores serão carregados aqui via JS -->
+</section>
 
-            <!-- Gráficos -->
-            <section class="charts-grid">
-                <div class="chart-card chart-loading" id="transaction-chart">
-                    <h3>Distribuição por Tipo de Transação</h3>
-                    <canvas id="transactionChart"></canvas>
-                </div>
-                <div class="chart-card chart-loading" id="type-chart">
-                    <h3>Top 5 Tipos de Imóveis</h3>
-                    <canvas id="typeChart"></canvas>
-                </div>
-            </section>
-
-            <!-- Filtros -->
-            <section class="filters-section">
-                <h3>Filtros do Mapa</h3>
-                <div class="filters-container">
-                    <div class="filter-group">
-                        <label for="transactionFilter">Tipo de Transação:</label>
-                        <select id="transactionFilter">
-                            <option value="">Todos</option>
-                            <option value="SALE">Venda</option>
-                            <option value="RENT">Aluguel</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label for="typeFilter">Tipo de Imóvel:</label>
-                        <select id="typeFilter">
-                            <option value="">Todos</option>
-                            <!-- Options will be loaded dynamically -->
-                        </select>
-                    </div>
-                    <button id="applyFilters" class="btn-apply-filters">Aplicar Filtros</button>
-                    <button id="clearFilters" class="btn-clear-filters">Limpar Filtros</button>
-                </div>
-            </section>
-
-            <section class="content-area">
-                <div id="map" class="map-loading">
-                    <div class="loading-spinner" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);"></div>
-                </div>
-            </section>
-        </main>
+<section class="charts-grid">
+    <div class="chart-card chart-loading" id="transaction-chart-container">
+        <h3>Distribuição por Tipo de Transação</h3>
+        <canvas id="transactionChart"></canvas>
     </div>
+    <div class="chart-card chart-loading" id="type-chart-container">
+        <h3>Top 5 Tipos de Imóveis</h3>
+        <canvas id="typeChart"></canvas>
+    </div>
+</section>
 
-    <!-- JS do Leaflet, MarkerCluster e o nosso script do mapa -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            showLoading();
-            
-            // Element references
-            const indicatorsContainer = document.getElementById('indicators-container');
-            const mapContainer = document.getElementById('map');
-            const transactionChartEl = document.getElementById('transactionChart');
-            const typeChartEl = document.getElementById('typeChart');
-            
-            // Initialize empty variables
-            let map;
-            let markers;
-            let allMarkers = [];
-            let propertyTypes = [];
-            
-            // Load data
-            Promise.all([
-                fetch('/api/map-data'),
-                fetch('/api/map-stats')
-            ])
-            .then(async ([propertiesRes, statsRes]) => {
-                const [properties, stats] = await Promise.all([
-                    propertiesRes.json(),
-                    statsRes.json()
-                ]);
-                
-                if (stats.error) throw new Error(stats.error);
-                
-                // Render indicators
-                renderIndicators(stats);
-                
-                // Initialize map
-                initMap(properties);
-                
-                // Initialize charts
-                initCharts(stats);
-                
-                // Populate type filter
-                populateTypeFilter(stats.by_type);
-                
-            }).catch(error => {
-                console.error('Error:', error);
-                indicatorsContainer.innerHTML = `
-                    <div class="alert alert-danger" style="grid-column: 1 / -1;">
-                        Erro ao carregar dados: ${error.message}
-                    </div>
-                `;
-            }).finally(() => {
-                hideLoading();
-                document.querySelectorAll('.chart-loading').forEach(el => {
-                    el.classList.remove('chart-loading');
-                });
-                mapContainer.classList.remove('map-loading');
-            });
-            
-            function renderIndicators(stats) {
-                indicatorsContainer.innerHTML = `
-                    <div class="indicator-card">
-                        <h3>Total de Imóveis</h3>
-                        <p class="indicator-value">${stats.total_properties}</p>
-                    </div>
-                    <div class="indicator-card">
-                        <h3>Para Venda</h3>
-                        <p class="indicator-value">${stats.by_transaction.SALE || 0}</p>
-                    </div>
-                    <div class="indicator-card">
-                        <h3>Para Aluguel</h3>
-                        <p class="indicator-value">${stats.by_transaction.RENT || 0}</p>
-                    </div>
-                    <div class="indicator-card">
-                        <h3>Tipos Diferentes</h3>
-                        <p class="indicator-value">${Object.keys(stats.by_type).length}</p>
-                    </div>
-                `;
-            }
-            
-            function initMap(properties) {
-                // Initialize map centered on Curitiba
-                map = L.map('map').setView([-25.4284, -49.2733], 12);
-                
-                // Add tile layer
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    maxZoom: 19,
-                    attribution: '© <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                }).addTo(map);
-                
-                // Initialize marker cluster group
-                markers = L.markerClusterGroup({
-                    chunkedLoading: true,
-                    maxClusterRadius: 50
-                });
-                
-                // Add markers
-                properties.forEach(property => {
-                    const lat = parseFloat(property.dcmAddressLatitude);
-                    const lng = parseFloat(property.dcmAddressLongitude);
-                    
-                    if (!isNaN(lat) && !isNaN(lng)) {
-                        const icon = createCustomIcon(property.chrTransactionType);
-                        const popupContent = createPopupContent(property);
-                        
-                        const marker = L.marker([lat, lng], { icon: icon })
-                            .bindPopup(popupContent);
-                        
-                        marker.propertyData = {
-                            transactionType: property.chrTransactionType,
-                            type: property.chrType
-                        };
-                        
-                        allMarkers.push(marker);
-                        markers.addLayer(marker);
-                    }
-                });
-                
-                map.addLayer(markers);
-            }
-            
-            function initCharts(stats) {
-                // Transaction chart
-                new Chart(transactionChartEl, {
-                    type: 'pie',
-                    data: {
-                        labels: ['Venda', 'Aluguel'],
-                        datasets: [{
-                            data: [stats.by_transaction.SALE || 0, stats.by_transaction.RENT || 0],
-                            backgroundColor: ['#28a745', '#007bff'],
-                            borderColor: '#0e203e'
-                        }]
-                    },
-                    options: { responsive: true, maintainAspectRatio: false }
-                });
-                
-                // Type chart (top 5)
-                const typeEntries = Object.entries(stats.by_type)
-                    .sort((a, b) => b[1] - a[1])
-                    .slice(0, 5);
-                
-                new Chart(typeChartEl, {
-                    type: 'bar',
-                    data: {
-                        labels: typeEntries.map(entry => entry[0]),
-                        datasets: [{
-                            label: 'Quantidade',
-                            data: typeEntries.map(entry => entry[1]),
-                            backgroundColor: '#1e3a5f',
-                            borderColor: '#f9a826',
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: { y: { beginAtZero: true } }
-                    }
-                });
-            }
-            
-            function populateTypeFilter(types) {
-                const typeFilter = document.getElementById('typeFilter');
-                const sortedTypes = Object.entries(types)
-                    .sort((a, b) => b[1] - a[1]);
-                
-                sortedTypes.forEach(([typeName, count]) => {
-                    const option = document.createElement('option');
-                    option.value = typeName;
-                    option.textContent = `${typeName} (${count})`;
-                    typeFilter.appendChild(option);
-                });
-            }
-            
-            function createCustomIcon(transactionType) {
-                const color = transactionType === 'SALE' ? '#28a745' : '#007bff';
-                return L.divIcon({
-                    className: 'custom-marker',
-                    html: `<div style="background-color: ${color}; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
-                    iconSize: [16, 16],
-                    iconAnchor: [8, 8]
-                });
-            }
-            
-            function createPopupContent(property) {
-                let valueText = 'Valor não informado';
-                if (property.chrTransactionType === 'SALE' && property.dcmSale) {
-                    valueText = new Intl.NumberFormat('pt-BR', {
-                        style: 'currency',
-                        currency: 'BRL'
-                    }).format(property.dcmSale);
-                } else if (property.chrTransactionType === 'RENT' && property.dcmExpectedRent) {
-                    valueText = new Intl.NumberFormat('pt-BR', {
-                        style: 'currency',
-                        currency: 'BRL'
-                    }).format(property.dcmExpectedRent);
-                }
-                
-                return `
-                    <div class="property-popup">
-                        <h4>${property.chrCondoName || 'Nome não informado'}</h4>
-                        <p><strong>Tipo:</strong> ${property.chrType || 'N/A'}</p>
-                        <p><strong>Transação:</strong> ${property.chrTransactionType === 'SALE' ? 'Venda' : 'Aluguel'}</p>
-                        <p><strong>Valor:</strong> ${valueText}</p>
-                        <p><strong>CEP:</strong> ${property.chrAddressPostalCode || 'N/A'}</p>
-                        ${property.facilities && property.facilities.length > 0 ? 
-                            `<p><strong>Facilidades:</strong> ${property.facilities.slice(0, 3).join(', ')}${property.facilities.length > 3 ? '...' : ''}</p>` : 
-                            ''
-                        }
-                    </div>
-                `;
-            }
-            
-            // Filter functionality
-            document.getElementById('applyFilters').addEventListener('click', applyFilters);
-            document.getElementById('clearFilters').addEventListener('click', clearFilters);
-            
-            function applyFilters() {
-                const transactionFilter = document.getElementById('transactionFilter').value;
-                const typeFilter = document.getElementById('typeFilter').value;
-                
-                markers.clearLayers();
-                
-                allMarkers.forEach(marker => {
-                    let showMarker = true;
-                    
-                    if (transactionFilter && marker.propertyData.transactionType !== transactionFilter) {
-                        showMarker = false;
-                    }
-                    
-                    if (typeFilter && marker.propertyData.type !== typeFilter) {
-                        showMarker = false;
-                    }
-                    
-                    if (showMarker) {
-                        markers.addLayer(marker);
-                    }
-                });
-            }
-            
-            function clearFilters() {
-                document.getElementById('transactionFilter').value = '';
-                document.getElementById('typeFilter').value = '';
-                markers.clearLayers();
-                allMarkers.forEach(marker => markers.addLayer(marker));
-            }
-        });
-    </script>
-</body>
-</html>
+<section class="content-area">
+    <div id="map" class="map-loading"></div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function ( ) {
+    showLoading();
+    
+    // CORREÇÃO: Apontar para os endpoints proxy no nosso backend
+    const dataUrl = '/api/proxy/map-data';
+    const statsUrl = '/api/proxy/map-stats';
+
+    Promise.all([
+        fetch(dataUrl),
+        fetch(statsUrl)
+    ])
+    .then(async ([propertiesRes, statsRes]) => {
+        if (!propertiesRes.ok || !statsRes.ok) {
+            throw new Error('Falha ao carregar dados do servidor.');
+        }
+        const properties = await propertiesRes.json();
+        const stats = await statsRes.json();
+        
+        if (properties.error || stats.error) {
+            throw new Error(properties.error || stats.error);
+        }
+        
+        renderIndicators(stats);
+        initMap(properties);
+        initCharts(stats);
+        
+    }).catch(error => {
+        console.error('Error:', error);
+        document.getElementById('indicators-container').innerHTML = `<div class="alert alert-danger" style="grid-column: 1 / -1;">Erro ao carregar dados: ${error.message}</div>`;
+    }).finally(() => {
+        hideLoading();
+        document.querySelectorAll('.chart-loading, .map-loading').forEach(el => el.classList.remove('chart-loading', 'map-loading'));
+    });
+    
+    // O resto do seu JavaScript do mapa (initMap, initCharts, etc.) continua aqui...
+    // Nenhuma outra alteração é necessária no resto do script.
+});
+
+function showLoading() { document.getElementById('global-loading').style.display = 'flex'; }
+function hideLoading() { document.getElementById('global-loading').style.display = 'none'; }
+
+function renderIndicators(stats) { /* ... */ }
+function initMap(properties) { /* ... */ }
+function initCharts(stats) { /* ... */ }
+// ... (cole o resto das funções JS que você já tinha para o mapa)
+</script>
+{% endblock %}

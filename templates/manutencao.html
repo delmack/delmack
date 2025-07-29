@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}Manutenção - Baggio Portal{% endblock %}
+
+{% block content %}
+<header class="main-header">
+    <h1>Painel de Manutenções</h1>
+</header>
+
+<div id="indicators-container" class="indicators-grid">
+    <!-- Indicadores serão carregados aqui via JS -->
+    <div class="indicator-card loading-indicator"></div>
+    <div class="indicator-card loading-indicator"></div>
+    <div class="indicator-card loading-indicator"></div>
+    <div class="indicator-card loading-indicator"></div>
+</div>
+
+<div id="charts-container" class="charts-grid" style="display: none;">
+    <div class="chart-card">
+        <h3>Manutenções por Status</h3>
+        <div class="chart-container">
+            <canvas id="statusChart"></canvas>
+        </div>
+    </div>
+    <div class="chart-card">
+        <h3>Manutenções por Categoria</h3>
+        <div class="chart-container">
+            <canvas id="categoryChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="content-area">
+    <h3>Lista de Manutenções</h3>
+    <div id="maintenance-list" class="table-container">
+        <!-- A lista será carregada aqui via JS -->
+        <p>Carregando dados...</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    showLoading();
+    fetch('/api/proxy/maintenance')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Erro na rede: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.error) {
+                throw new Error(`Erro da API: ${data.error}`);
+            }
+            renderPage(data);
+        })
+        .catch(error => {
+            console.error('Falha ao carregar dados de manutenção:', error);
+            document.getElementById('indicators-container').innerHTML = `<div class="alert alert-danger" style="grid-column: 1 / -1;">${error.message}</div>`;
+        })
+        .finally(() => {
+            hideLoading();
+        });
+});
+
+function renderPage(maintenances) {
+    // 1. Renderizar Indicadores
+    const statusCounts = countBy(maintenances, 'chrStatus');
+    const categoryCounts = countBy(maintenances, 'chrCategoryLabel');
+    
+    const indicatorsContainer = document.getElementById('indicators-container');
+    indicatorsContainer.innerHTML = `
+        <div class="indicator-card"><h3>Total</h3><p class="indicator-value">${maintenances.length}</p></div>
+        <div class="indicator-card"><h3>Abertas</h3><p class="indicator-value">${statusCounts['Aberto'] || 0}</p></div>
+        <div class="indicator-card"><h3>Em Andamento</h3><p class="indicator-value">${statusCounts['Em Andamento'] || 0}</p></div>
+        <div class="indicator-card"><h3>Concluídas</h3><p class="indicator-value">${statusCounts['Concluído'] || 0}</p></div>
+    `;
+
+    // 2. Renderizar Gráficos
+    const chartOptions = { responsive: true, maintainAspectRatio: false };
+    new Chart(document.getElementById('statusChart'), {
+        type: 'pie',
+        data: {
+            labels: Object.keys(statusCounts),
+            datasets: [{ data: Object.values(statusCounts), backgroundColor: ['#f9a826', '#1e3a5f', '#28a745'] }]
+        },
+        options: chartOptions
+    });
+    new Chart(document.getElementById('categoryChart'), {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(categoryCounts),
+            datasets: [{ data: Object.values(categoryCounts), backgroundColor: ['#f9a826', '#1e3a5f', '#28a745', '#8892b0', '#dc3545'] }]
+        },
+        options: chartOptions
+    });
+    document.getElementById('charts-container').style.display = 'grid';
+
+    // 3. Renderizar Tabela
+    const listContainer = document.getElementById('maintenance-list');
+    let tableHTML = `
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Título</th>
+                    <th>Status</th>
+                    <th>Categoria</th>
+                    <th>Responsável</th>
+                    <th>Data Solicitação</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    maintenances.forEach(m => {
+        tableHTML += `
+            <tr>
+                <td>${m.idMaintenance}</td>
+                <td>${m.chrTitle || 'N/A'}</td>
+                <td><span class="status-badge status-${(m.chrStatus || '').toLowerCase()}">${m.chrStatus || 'N/A'}</span></td>
+                <td>${m.chrCategoryLabel || 'N/A'}</td>
+                <td>${m.responsible || 'N/A'}</td>
+                <td>${new Date(m.dteRequest).toLocaleDateString('pt-BR')}</td>
+            </tr>
+        `;
+    });
+    tableHTML += '</tbody></table>';
+    listContainer.innerHTML = tableHTML;
+}
+
+function countBy(arr, key) {
+    return arr.reduce((acc, item) => {
+        const value = item[key] || 'N/A';
+        acc[value] = (acc[value] || 0) + 1;
+        return acc;
+    }, {});
+}
+
+function showLoading() { document.getElementById('global-loading').style.display = 'flex'; }
+function hideLoading() { document.getElementById('global-loading').style.display = 'none'; }
+</script>
+{% endblock %}

@@ -1,335 +1,102 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestão TI - Kanban Board - Baggio Portal</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% extends "base.html" %}
+{% block title %}Gestão de TI - Baggio Portal{% endblock %}
+{% block styles %}
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-</head>
-<body>
-    {% include 'loading.html' %}
-    <div class="dashboard-container">
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <img src="{{ url_for('static', filename='baggio-logo.png') }}" alt="Logo Baggio" class="sidebar-logo">
-                <h3>BAGGIO PORTAL</h3>
+{% endblock %}
+
+{% block content %}
+<header class="main-header"><h1>Gestão de Tarefas de TI</h1></header>
+
+{% with messages = get_flashed_messages(with_categories=true ) %}
+  {% if messages %}{% for category, message in messages %}
+    <div class="alert alert-{{ category }}">{{ message }}</div>
+  {% endfor %}{% endif %}
+{% endwith %}
+
+<section class="indicators-grid">
+    <div class="indicator-card"><h3>Total</h3><p class="indicator-value">{{ total_tasks }}</p></div>
+    <div class="indicator-card"><h3>Backlog</h3><p class="indicator-value">{{ status_counts.get('Backlog', 0) }}</p></div>
+    <div class="indicator-card"><h3>Analyze</h3><p class="indicator-value">{{ status_counts.get('Analyze', 0) }}</p></div>
+    <div class="indicator-card"><h3>Doing</h3><p class="indicator-value">{{ status_counts.get('Doing', 0) }}</p></div>
+    <div class="indicator-card"><h3>Concluded</h3><p class="indicator-value">{{ status_counts.get('Concluded', 0) }}</p></div>
+</section>
+
+<!-- FORMULÁRIO CORRIGIDO -->
+<div class="form-container">
+    <h3>Criar Nova Tarefa</h3>
+    <form action="{{ url_for('nova_tarefa_ti') }}" method="post" class="creation-form">
+        <div class="form-group">
+            <label for="titulo-tarefa">Título da Tarefa</label>
+            <input type="text" id="titulo-tarefa" name="titulo" placeholder="Título da Tarefa" required class="form-input">
+        </div>
+        <div class="form-group-inline">
+            <div class="form-subgroup"><label for="prioridade-tarefa">Prioridade</label><select id="prioridade-tarefa" name="prioridade" required class="form-select"><option value="" disabled selected>Selecione...</option><option value="Baixa">Baixa</option><option value="Média">Média</option><option value="Alta">Alta</option><option value="Crítica">Crítica</option></select></div>
+            <div class="form-subgroup"><label for="responsavel-tarefa">Responsável</label><input type="text" id="responsavel-tarefa" name="responsavel" placeholder="Nome do responsável" required class="form-input"></div>
+            <div class="form-subgroup"><label for="status-tarefa">Status Inicial</label><select id="status-tarefa" name="status" required class="form-select"><option value="" disabled selected>Selecione...</option><option value="Backlog">Backlog</option><option value="Analyze">Analyze</option><option value="Doing">Doing</option><option value="Concluded">Concluded</option></select></div>
+        </div>
+        <div class="form-group">
+            <label for="descricao-tarefa">Descrição da Tarefa</label>
+            <textarea id="descricao-tarefa" name="descricao" placeholder="Detalhes da tarefa..." required class="form-textarea" rows="3"></textarea>
+        </div>
+        <div class="form-actions"><button type="submit" class="btn-submit-ti">CRIAR TAREFA</button></div>
+    </form>
+</div>
+
+<div class="kanban-board">
+    {% for status, tasks in board.items() %}
+    <div class="kanban-column">
+        <h3 class="column-title">{{ status }} ({{ tasks|length }})</h3>
+        <div class="tasks-container" data-status="{{ status }}">
+            {% for task in tasks %}
+            <div class="task-card" data-task-id="{{ task.id }}">
+                <div class="task-header">
+                    <h4>#{{ task.id }} - {{ task.titulo }}</h4>
+                    <span class="priority-badge priority-{{ task.prioridade.lower() }}">{{ task.prioridade }}</span>
+                </div>
+                <p class="task-desc">{{ task.descricao }}</p>
+                <div class="task-footer">
+                    <span class="task-responsible"><strong>Resp:</strong> {{ task.responsavel }}</span>
+                    <span class="task-date">{{ task.data_criacao }}</span>
+                </div>
             </div>
-            <nav class="sidebar-nav">
-                <a href="{{ url_for('admin_portal') }}" class="nav-item">PAINEL</a>
-                <a href="{{ url_for('pagina_menu', pagina='usuarios') }}" class="nav-item">USUÁRIOS</a>
-                <a href="{{ url_for('pagina_menu', pagina='imoveis') }}" class="nav-item">IMÓVEIS</a>
-                <a href="{{ url_for('mapa') }}" class="nav-item">MAPA</a>
-                <a href="{{ url_for('pagina_menu', pagina='contratos') }}" class="nav-item">CONTRATOS</a>
-                <a href="{{ url_for('pagina_menu', pagina='manutencao') }}" class="nav-item">MANUTENÇÃO</a>
-                <a href="{{ url_for('pagina_menu', pagina='pessoas') }}" class="nav-item">PESSOAS</a>
-                <a href="{{ url_for('pagina_menu', pagina='financeiro') }}" class="nav-item">FINANCEIRO</a>
-                <a href="{{ url_for('pagina_menu', pagina='imobiliaria') }}" class="nav-item">IMOBILIÁRIA</a>
-                <a href="{{ url_for('pagina_menu', pagina='crm') }}" class="nav-item">CRM</a>
-                <a href="{{ url_for('ti_kanban') }}" class="nav-item nav-item-ti active">GESTÃO TI</a>
-                <a href="{{ url_for('chamado_ti') }}" class="nav-item nav-item-ti">CHAMADO TI</a>
-            </nav>
-            <div class="sidebar-footer">
-                <div class="user-info">
-                    <span class="username">Utilizador: {{ session.get('username') }}</span>
-                    <a href="{{ url_for('logout') }}" class="logout-link">Sair</a>
-                </div>
-            </div>
-        </aside>
-
-        <main class="main-content">
-            <header class="main-header">
-                <h1>Gestão de Tarefas de TI</h1>
-            </header>
-
-            {% with messages = get_flashed_messages(with_categories=true) %}
-              {% if messages %}
-                {% for category, message in messages %}
-                  <div class="alert alert-{{ category }}">{{ message }}</div>
-                {% endfor %}
-              {% endif %}
-            {% endwith %}
-
-            <section class="indicators-grid">
-                <div class="indicator-card">
-                    <h3>Total de Tarefas</h3>
-                    <p class="indicator-value">{{ total_tasks }}</p>
-                </div>
-                <div class="indicator-card">
-                    <h3>Backlog</h3>
-                    <p class="indicator-value">{{ status_counts.get('Backlog', 0) }}</p>
-                </div>
-                <div class="indicator-card">
-                    <h3>Priorizadas</h3>
-                    <p class="indicator-value">{{ status_counts.get('Priorizadas', 0) }}</p>
-                </div>
-                <div class="indicator-card">
-                    <h3>Em Andamento</h3>
-                    <p class="indicator-value">{{ status_counts.get('Em andamento', 0) }}</p>
-                </div>
-                <div class="indicator-card">
-                    <h3>Concluídas</h3>
-                    <p class="indicator-value">{{ status_counts.get('Concluídas', 0) }}</p>
-                </div>
-            </section>
-
-            <section class="charts-grid">
-                <div class="chart-card chart-loading">
-                    <h3>Status das Tarefas</h3>
-                    <canvas id="statusChart"></canvas>
-                </div>
-                <div class="chart-card chart-loading">
-                    <h3>Distribuição por Responsável</h3>
-                    <canvas id="responsibleChart"></canvas>
-                </div>
-                <div class="chart-card chart-loading">
-                    <h3>Distribuição por Prioridade</h3>
-                    <canvas id="priorityChart"></canvas>
-                </div>
-            </section>
-
-            <div class="form-container">
-                <h3>Criar Nova Tarefa</h3>
-                <form action="{{ url_for('nova_tarefa_ti') }}" method="post" id="task-form">
-                    <div class="form-row">
-                        <input type="text" name="titulo" placeholder="Título da Tarefa" required class="form-input">
-                        <select name="prioridade" required class="form-select">
-                            <option value="">Selecione a Prioridade</option>
-                            <option value="Baixa">Baixa</option>
-                            <option value="Média">Média</option>
-                            <option value="Alta">Alta</option>
-                            <option value="Crítica">Crítica</option>
-                        </select>
-                    </div>
-                    <div class="form-row">
-                        <input type="text" name="responsavel" placeholder="Responsável" required class="form-input">
-                        <select name="status" required class="form-select">
-                            <option value="">Selecione o Status</option>
-                            <option value="Backlog">Backlog</option>
-                            <option value="Priorizadas">Priorizadas</option>
-                            <option value="Em andamento">Em andamento</option>
-                            <option value="Concluídas">Concluídas</option>
-                        </select>
-                    </div>
-                    <textarea name="descricao" placeholder="Descrição da tarefa..." required class="form-textarea"></textarea>
-                    <button type="submit" class="btn-submit-ti" id="submit-btn">
-                        CRIAR TAREFA
-                    </button>
-                </form>
-            </div>
-
-            <div class="kanban-board">
-                {% for status, tasks in board.items() %}
-                <div class="kanban-column">
-                    <h3 class="column-title">{{ status }}</h3>
-                    <div class="tasks-container" data-status="{{ status }}">
-                        {% for task in tasks %}
-                        <div class="task-card" data-task-id="{{ task.id }}">
-                            <div class="task-header">
-                                <h4>#{{ task.id }} - {{ task.titulo }}</h4>
-                                <span class="priority-badge priority-{{ task.prioridade.lower() }}">{{ task.prioridade }}</span>
-                            </div>
-                            <p class="task-desc">{{ task.descricao }}</p>
-                            <div class="task-footer">
-                                <span class="task-responsible">{{ task.responsavel }}</span>
-                                <span class="task-date">{{ task.data_criacao }}</span>
-                            </div>
-                            
-                            {% if task.notas %}
-                            <div class="task-notes">
-                                <h5>Histórico:</h5>
-                                <ul>
-                                    {% for nota in task.notas %}
-                                    <li>{{ nota }}</li>
-                                    {% endfor %}
-                                </ul>
-                            </div>
-                            {% endif %}
-
-                            <div class="task-actions">
-                                <form action="{{ url_for('add_nota_tarefa') }}" method="post" class="note-form">
-                                    <input type="hidden" name="task_id" value="{{ task.id }}">
-                                    <input type="text" name="nota" placeholder="Adicionar nota..." required>
-                                    <button type="submit" class="btn-small">Salvar</button>
-                                </form>
-                            </div>
-                        </div>
-                        {% else %}
-                        <p class="no-tasks">Nenhuma tarefa nesta coluna.</p>
-                        {% endfor %}
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </main>
+            {% else %}<p class="no-tasks">Nenhuma tarefa.</p>{% endfor %}
+        </div>
     </div>
+    {% endfor %}
+</div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize charts
-            const statusChart = new Chart(
-                document.getElementById('statusChart'), 
-                {
-                    type: 'pie',
-                    data: {
-                        labels: {{ chart_status_labels|tojson }},
-                        datasets: [{
-                            data: {{ chart_status_data|tojson }},
-                            backgroundColor: ['#f9a826', '#1e3a5f', '#28a745', '#8892b0']
-                        }]
-                    }
-                }
-            );
+<!-- GRÁFICOS ATUALIZADOS -->
+<section class="charts-grid" style="margin-top: 30px;">
+    <div class="chart-card"><h3>Tarefas por Status</h3><div class="chart-container"><canvas id="statusChart"></canvas></div></div>
+    <div class="chart-card"><h3>Tarefas por Responsável</h3><div class="chart-container"><canvas id="responsibleChart"></canvas></div></div>
+    <!-- NOVO: Gráfico de Tempo por Prioridade -->
+    <div class="chart-card"><h3>Tempo de Resolução por Prioridade (h)</h3><div class="chart-container"><canvas id="timePriorityChart"></canvas></div></div>
+</section>
+<section class="charts-grid" style="margin-top: 1.5rem;">
+    <div class="chart-card chart-full-width"><h3>Tarefas por Prioridade</h3><div class="chart-container" style="height: 300px;"><canvas id="priorityChart"></canvas></div></div>
+</section>
+{% endblock %}
 
-            const responsibleChart = new Chart(
-                document.getElementById('responsibleChart'), 
-                {
-                    type: 'doughnut',
-                    data: {
-                        labels: {{ chart_responsible_labels|tojson }},
-                        datasets: [{
-                            data: {{ chart_responsible_data|tojson }},
-                            backgroundColor: ['#f9a826', '#1e3a5f', '#28a745', '#8892b0']
-                        }]
-                    }
-                }
-            );
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Drag-and-Drop (sem alterações)
+    document.querySelectorAll('.tasks-container').forEach(c => new Sortable(c, { group: 'gestao_ti', animation: 150, onEnd: (e) => {
+        fetch("{{ url_for('mover_tarefa') }}", { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: `task_id=${e.item.dataset.taskId}&novo_status=${e.to.dataset.status}`})
+        .then(r => r.json()).then(d => d.success && window.location.reload());
+    }}));
 
-            const priorityChart = new Chart(
-                document.getElementById('priorityChart'), 
-                {
-                    type: 'bar',
-                    data: {
-                        labels: {{ chart_priority_labels|tojson }},
-                        datasets: [{
-                            label: 'Nº de Tarefas',
-                            data: {{ chart_priority_data|tojson }},
-                            backgroundColor: '#1e3a5f',
-                            borderColor: '#f9a826',
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        scales: {
-                            y: { beginAtZero: true }
-                        }
-                    }
-                }
-            );
+    const highlightColor = '#fd7e14';
+    const colorPalette = ['#1e3a5f', '#f9a826', '#28a745', '#8892b0', '#ffc107'];
+    const chartOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } };
 
-            // Remove loading classes from charts
-            document.querySelectorAll('.chart-loading').forEach(el => {
-                el.classList.remove('chart-loading');
-            });
-
-            // Initialize Sortable for drag and drop
-            const columns = document.querySelectorAll('.tasks-container');
-            columns.forEach(column => {
-                new Sortable(column, {
-                    group: 'kanban',
-                    animation: 150,
-                    ghostClass: 'sortable-ghost',
-                    chosenClass: 'sortable-chosen',
-                    dragClass: 'sortable-drag',
-                    onStart: () => showLoading(),
-                    onEnd: async function(evt) {
-                        const taskId = evt.item.getAttribute('data-task-id');
-                        const newStatus = evt.to.getAttribute('data-status');
-                        
-                        try {
-                            const response = await fetch('/ti/mover_tarefa', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/x-www-form-urlencoded',
-                                },
-                                body: `task_id=${taskId}&novo_status=${encodeURIComponent(newStatus)}`
-                            });
-                            
-                            if (!response.ok) {
-                                throw new Error('Falha ao mover tarefa');
-                            }
-                        } catch (error) {
-                            console.error('Error:', error);
-                            evt.from.appendChild(evt.item);
-                            alert('Erro ao mover a tarefa. Tente novamente.');
-                        } finally {
-                            hideLoading();
-                        }
-                    }
-                });
-            });
-
-            // Task form submission
-            const taskForm = document.getElementById('task-form');
-            const submitBtn = document.getElementById('submit-btn');
-            
-            taskForm.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = `
-                    <span class="button-spinner"></span> SALVANDO...
-                `;
-                
-                try {
-                    const formData = new FormData(taskForm);
-                    const response = await fetch(taskForm.action, {
-                        method: 'POST',
-                        body: formData
-                    });
-                    
-                    if (!response.ok) throw new Error('Falha ao criar tarefa');
-                    
-                    const result = await response.json();
-                    if (result.success) {
-                        window.location.reload();
-                    } else {
-                        throw new Error(result.message || 'Erro desconhecido');
-                    }
-                } catch (error) {
-                    alert('Erro: ' + error.message);
-                } finally {
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = 'CRIAR TAREFA';
-                }
-            });
-
-            // Note form submission
-            document.querySelectorAll('.note-form').forEach(form => {
-                form.addEventListener('submit', async function(e) {
-                    e.preventDefault();
-                    const button = this.querySelector('button[type="submit"]');
-                    
-                    button.disabled = true;
-                    button.innerHTML = `
-                        <span class="button-spinner"></span>
-                    `;
-                    
-                    try {
-                        const formData = new FormData(this);
-                        const response = await fetch(this.action, {
-                            method: 'POST',
-                            body: formData
-                        });
-                        
-                        if (!response.ok) throw new Error('Falha ao adicionar nota');
-                        
-                        const result = await response.json();
-                        if (result.success) {
-                            window.location.reload();
-                        } else {
-                            throw new Error(result.message || 'Erro desconhecido');
-                        }
-                    } catch (error) {
-                        alert('Erro: ' + error.message);
-                    } finally {
-                        button.disabled = false;
-                        button.textContent = 'Salvar';
-                    }
-                });
-            });
-        });
-    </script>
-</body>
-</html>
+    new Chart(document.getElementById('statusChart'), { type: 'pie', data: { labels: {{ chart_status_labels|tojson }}, datasets: [{ data: {{ chart_status_data|tojson }}, backgroundColor: colorPalette }] }, options: chartOptions });
+    // CORREÇÃO: Gráfico de responsáveis com laranja
+    new Chart(document.getElementById('responsibleChart'), { type: 'doughnut', data: { labels: {{ chart_responsible_labels|tojson }}, datasets: [{ data: {{ chart_responsible_data|tojson }}, backgroundColor: [highlightColor, ...colorPalette.slice(1)] }] }, options: chartOptions });
+    // CORREÇÃO: Gráfico de prioridade com laranja
+    new Chart(document.getElementById('priorityChart'), { type: 'bar', data: { labels: {{ chart_priority_labels|tojson }}, datasets: [{ label: 'Nº de Tarefas', data: {{ chart_priority_data|tojson }}, backgroundColor: highlightColor }] }, options: chartOptions });
+    // NOVO: Renderização do gráfico de tempo por prioridade
+    new Chart(document.getElementById('timePriorityChart'), { type: 'bar', data: { labels: {{ chart_time_priority_labels|tojson }}, datasets: [{ label: 'Horas', data: {{ chart_time_priority_data|tojson }}, backgroundColor: colorPalette }] }, options: chartOptions });
+});
+</script>
+{% endblock %}

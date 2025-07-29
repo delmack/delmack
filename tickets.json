@@ -5,9 +5,10 @@
         "descricao": "123",
         "criado_por": "admin",
         "data_criacao": "26/07/2025 17:59",
-        "status": "Em Andamento",
+        "status": "Aberto",
         "notas": [
-            "Status alterado para 'Em Andamento' por adminti em 27/07/2025 17:14."
+            "Status alterado para 'Em Andamento' por adminti em 27/07/2025 17:14.",
+            "Status alterado para 'Aberto' por adminti em 29/07/2025 09:50."
         ]
     },
     {
@@ -16,7 +17,10 @@
         "descricao": "TESTE",
         "criado_por": "admin",
         "data_criacao": "26/07/2025 17:59",
-        "status": "Aberto",
-        "notas": []
+        "status": "Concluído",
+        "notas": [
+            "Status alterado para 'Aberto' por adminti em 29/07/2025 09:46.",
+            "Status alterado para 'Concluído' por adminti em 29/07/2025 09:46."
+        ]
     }
 ]
