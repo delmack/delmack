@@ -13,13 +13,14 @@
     <div class="dashboard-container">
         <aside class="sidebar">
             <div class="sidebar-header">
-                <img src="{{ url_for('static', filename='baggio-logo.png' ) }}" alt="Logo Baggio" class="sidebar-logo">
+                <!-- LOGO ATUALIZADA AQUI -->
+                <img src="https://baggioimoveis.com.br/wp-content/uploads/2024/08/cropped-logo.png" alt="Logo Baggio" class="sidebar-logo">
+                
                 <h3>BAGGIO PORTAL</h3>
             </div>
             <nav class="sidebar-nav">
                 {% set active_page = request.endpoint %}
-                <a href="{{ url_for('admin_portal') }}" class="nav-item {% if active_page == 'admin_portal' %}active{% endif %}">PAINEL</a>
-                <!-- CORREÇÃO: Estes links agora funcionarão pois as rotas existem no app.py -->
+                <a href="{{ url_for('admin_portal' ) }}" class="nav-item {% if active_page == 'admin_portal' %}active{% endif %}">PAINEL</a>
                 <a href="{{ url_for('mapa') }}" class="nav-item {% if active_page == 'mapa' %}active{% endif %}">MAPA</a>
                 <a href="{{ url_for('manutencao') }}" class="nav-item {% if active_page == 'manutencao' %}active{% endif %}">MANUTENÇÃO</a>
                 

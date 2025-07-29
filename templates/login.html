@@ -13,11 +13,13 @@
     {% include 'loading.html' %}
     <div class="login-container">
         <div class="login-form">
-            <img src="{{ url_for('static', filename='baggio-logo.png' ) }}" alt="Logo Baggio Imobiliária" class="logo">
+            <!-- LOGO ATUALIZADA AQUI -->
+            <img src="https://baggioimoveis.com.br/wp-content/uploads/2024/08/cropped-logo.png" alt="Logo Baggio Imobiliária" class="logo">
+            
             <h2>BAGGIO PORTAL</h2>
             <p class="subtitle">Portal de Indicadores Internos</p>
 
-            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% with messages = get_flashed_messages(with_categories=true ) %}
               {% if messages %}
                 {% for category, message in messages %}
                   <div class="alert alert-{{ category }}">{{ message }}</div>
@@ -35,6 +37,10 @@
                 <button type="submit" class="btn-login" id="login-btn">ACEDER AO PORTAL</button>
             </form>
         </div>
+
+        <footer class="login-footer">
+            Delmack Consultoria
+        </footer>
     </div>
 
     <script>
@@ -47,7 +53,6 @@
                 loginBtn.innerHTML = `
                     <span class="button-spinner"></span> AUTENTICANDO...
                 `;
-                showLoading();
             });
         });
     </script>
