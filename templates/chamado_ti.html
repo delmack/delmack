@@ -27,6 +27,9 @@
                 <a href="{{ url_for('pagina_menu', pagina='financeiro') }}" class="nav-item">FINANCEIRO</a>
                 <a href="{{ url_for('pagina_menu', pagina='imobiliaria') }}" class="nav-item">IMOBILIÁRIA</a>
                 <a href="{{ url_for('pagina_menu', pagina='crm') }}" class="nav-item">CRM</a>
+                {% if session.get('role') == 'ti_admin' %}
+                <a href="{{ url_for('ti_kanban') }}" class="nav-item nav-item-ti">TI</a>
+                {% endif %}
                 <a href="{{ url_for('chamado_ti') }}" class="nav-item nav-item-ti active">CHAMADO TI</a> <!-- Marca como ativo -->
             </nav>
             <div class="sidebar-footer">

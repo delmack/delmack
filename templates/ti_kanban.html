@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TI - Kanban Board - Baggio Portal</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <!-- Biblioteca Chart.js para os gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Biblioteca Sortable.js para drag-and-drop -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- INÍCIO DA BARRA LATERAL (SIDEBAR) -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="{{ url_for('static', filename='baggio-logo.png') }}" alt="Logo Baggio" class="sidebar-logo">
+                <h3>BAGGIO PORTAL</h3>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('admin_portal') }}" class="nav-item">PAINEL</a>
+                <a href="{{ url_for('pagina_menu', pagina='usuarios') }}" class="nav-item">USUÁRIOS</a>
+                <a href="{{ url_for('pagina_menu', pagina='imoveis') }}" class="nav-item">IMÓVEIS</a>
+                <a href="{{ url_for('mapa') }}" class="nav-item">MAPA</a>
+                <a href="{{ url_for('pagina_menu', pagina='contratos') }}" class="nav-item">CONTRATOS</a>
+                <a href="{{ url_for('pagina_menu', pagina='manutencao') }}" class="nav-item">MANUTENÇÃO</a>
+                <a href="{{ url_for('pagina_menu', pagina='pessoas') }}" class="nav-item">PESSOAS</a>
+                <a href="{{ url_for('pagina_menu', pagina='financeiro') }}" class="nav-item">FINANCEIRO</a>
+                <a href="{{ url_for('pagina_menu', pagina='imobiliaria') }}" class="nav-item">IMOBILIÁRIA</a>
+                <a href="{{ url_for('pagina_menu', pagina='crm') }}" class="nav-item">CRM</a>
+                {% if session.get('role') == 'ti_admin' %}
+                <a href="{{ url_for('ti_kanban') }}" class="nav-item nav-item-ti active">TI</a>
+                {% endif %}
+                <a href="{{ url_for('chamado_ti') }}" class="nav-item nav-item-ti">CHAMADO TI</a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <span class="username">Utilizador: {{ session.get('username') }}</span>
+                    <a href="{{ url_for('logout') }}" class="logout-link">Sair</a>
+                </div>
+            </div>
+        </aside>
+        <!-- FIM DA BARRA LATERAL (SIDEBAR) -->
+
+        <!-- Conteúdo Principal -->
+        <main class="main-content">
+            <header class="main-header">
+                <h1>TI - Gestão de Tarefas</h1>
+            </header>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                {% for category, message in messages %}
+                  <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+
+            <!-- Secção de Indicadores -->
+            <section class="indicators-grid">
+                <div class="indicator-card">
+                    <h3>Total de Tarefas</h3>
+                    <p class="indicator-value">{{ total_tasks }}</p>
+                </div>
+                <div class="indicator-card">
+                    <h3>Backlog</h3>
+                    <p class="indicator-value">{{ status_counts.get('Backlog', 0) }}</p>
+                </div>
+                <div class="indicator-card">
+                    <h3>Priorizadas</h3>
+                    <p class="indicator-value">{{ status_counts.get('Priorizadas', 0) }}</p>
+                </div>
+                <div class="indicator-card">
+                    <h3>Em Andamento</h3>
+                    <p class="indicator-value">{{ status_counts.get('Em andamento', 0) }}</p>
+                </div>
+                <div class="indicator-card">
+                    <h3>Concluídas</h3>
+                    <p class="indicator-value">{{ status_counts.get('Concluídas', 0) }}</p>
+                </div>
+            </section>
+
+            <!-- Secção de Gráficos -->
+            <section class="charts-grid">
+                <div class="chart-card">
+                    <h3>Status das Tarefas</h3>
+                    <canvas id="statusChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3>Distribuição por Responsável</h3>
+                    <canvas id="responsibleChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3>Distribuição por Prioridade</h3>
+                    <canvas id="priorityChart"></canvas>
+                </div>
+            </section>
+
+            <!-- Formulário para criar nova tarefa -->
+            <div class="form-container">
+                <h3>Criar Nova Tarefa</h3>
+                <form action="{{ url_for('nova_tarefa_ti') }}" method="post">
+                    <div class="form-row">
+                        <input type="text" name="titulo" placeholder="Título da Tarefa" required class="form-input">
+                        <select name="prioridade" required class="form-select">
+                            <option value="">Selecione a Prioridade</option>
+                            <option value="Baixa">Baixa</option>
+                            <option value="Média">Média</option>
+                            <option value="Alta">Alta</option>
+                            <option value="Crítica">Crítica</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <input type="text" name="responsavel" placeholder="Responsável" required class="form-input">
+                        <select name="status" required class="form-select">
+                            <option value="">Selecione o Status</option>
+                            <option value="Backlog">Backlog</option>
+                            <option value="Priorizadas">Priorizadas</option>
+                            <option value="Em andamento">Em andamento</option>
+                            <option value="Concluídas">Concluídas</option>
+                        </select>
+                    </div>
+                    <textarea name="descricao" placeholder="Descrição da tarefa..." required class="form-textarea"></textarea>
+                    <button type="submit" class="btn-submit-ti">CRIAR TAREFA</button>
+                </form>
+            </div>
+
+            <!-- Quadro Kanban -->
+            <div class="kanban-board">
+                {% for status, tasks in board.items() %}
+                <div class="kanban-column">
+                    <h3 class="column-title">{{ status }}</h3>
+                    <div class="tasks-container" data-status="{{ status }}">
+                        {% for task in tasks %}
+                        <div class="task-card" data-task-id="{{ task.id }}">
+                            <div class="task-header">
+                                <h4>#{{ task.id }} - {{ task.titulo }}</h4>
+                                <span class="priority-badge priority-{{ task.prioridade.lower() }}">{{ task.prioridade }}</span>
+                            </div>
+                            <p class="task-desc">{{ task.descricao }}</p>
+                            <div class="task-footer">
+                                <span class="task-responsible">{{ task.responsavel }}</span>
+                                <span class="task-date">{{ task.data_criacao }}</span>
+                            </div>
+                            
+                            {% if task.notas %}
+                            <div class="task-notes">
+                                <h5>Histórico:</h5>
+                                <ul>
+                                    {% for nota in task.notas %}
+                                    <li>{{ nota }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            {% endif %}
+
+                            <div class="task-actions">
+                                <form action="{{ url_for('add_nota_tarefa') }}" method="post" class="note-form">
+                                    <input type="hidden" name="task_id" value="{{ task.id }}">
+                                    <input type="text" name="nota" placeholder="Adicionar nota..." required>
+                                    <button type="submit">Salvar</button>
+                                </form>
+                            </div>
+                        </div>
+                        {% else %}
+                        <p class="no-tasks">Nenhuma tarefa nesta coluna.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts para os gráficos e drag-and-drop -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Dados para os gráficos
+            const statusLabels = {{ chart_status_labels|tojson }};
+            const statusData = {{ chart_status_data|tojson }};
+            const responsibleLabels = {{ chart_responsible_labels|tojson }};
+            const responsibleData = {{ chart_responsible_data|tojson }};
+            const priorityLabels = {{ chart_priority_labels|tojson }};
+            const priorityData = {{ chart_priority_data|tojson }};
+            
+            const chartColors = ['#f9a826', '#1e3a5f', '#28a745', '#8892b0', '#ff6f00'];
+
+            // Gráfico de Status
+            new Chart(document.getElementById('statusChart'), {
+                type: 'pie',
+                data: {
+                    labels: statusLabels,
+                    datasets: [{
+                        data: statusData,
+                        backgroundColor: chartColors,
+                        borderColor: '#0e203e'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+
+            // Gráfico de Responsáveis
+            new Chart(document.getElementById('responsibleChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: responsibleLabels,
+                    datasets: [{
+                        data: responsibleData,
+                        backgroundColor: chartColors,
+                        borderColor: '#0e203e'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+
+            // Gráfico de Prioridades
+            new Chart(document.getElementById('priorityChart'), {
+                type: 'bar',
+                data: {
+                    labels: priorityLabels,
+                    datasets: [{
+                        label: 'Nº de Tarefas',
+                        data: priorityData,
+                        backgroundColor: '#1e3a5f',
+                        borderColor: '#f9a826',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // Configuração do Drag and Drop
+            const columns = document.querySelectorAll('.tasks-container');
+            columns.forEach(column => {
+                new Sortable(column, {
+                    group: 'kanban',
+                    animation: 150,
+                    ghostClass: 'sortable-ghost',
+                    chosenClass: 'sortable-chosen',
+                    dragClass: 'sortable-drag',
+                    onEnd: function (evt) {
+                        const taskId = evt.item.getAttribute('data-task-id');
+                        const newStatus = evt.to.getAttribute('data-status');
+                        
+                        // Enviar requisição para atualizar o status da tarefa
+                        fetch('/ti/mover_tarefa', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                            },
+                            body: `task_id=${taskId}&novo_status=${encodeURIComponent(newStatus)}`
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                // Se houver erro, reverter a mudança
+                                evt.from.appendChild(evt.item);
+                                alert('Erro ao mover a tarefa. Tente novamente.');
+                            }
+                        })
+                        .catch(error => {
+                            // Se houver erro, reverter a mudança
+                            evt.from.appendChild(evt.item);
+                            alert('Erro ao mover a tarefa. Tente novamente.');
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+

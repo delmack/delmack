@@ -110,3 +110,345 @@ body {
 .alert-danger { background-color: #dc3545; color: white; }
 .alert-warning { background-color: #ffc107; color: #212529; }
 .alert-info { background-color: #17a2b8; color: white; }
+
+
+/* === ESTILOS PARA O SISTEMA KANBAN === */
+.form-row {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.form-row .form-input,
+.form-row .form-select {
+    flex: 1;
+}
+
+.form-select {
+    padding: 12px 15px;
+    border: 1px solid var(--light-blue);
+    border-radius: 5px;
+    background-color: var(--dark-blue);
+    color: var(--text-primary);
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.form-select option {
+    background-color: var(--dark-blue);
+    color: var(--text-primary);
+}
+
+.task-card {
+    background-color: var(--medium-blue);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    cursor: move;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.task-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.task-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+}
+
+.task-header h4 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 16px;
+    flex: 1;
+}
+
+.priority-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.priority-baixa {
+    background-color: #28a745;
+    color: white;
+}
+
+.priority-média {
+    background-color: #ffc107;
+    color: var(--dark-blue);
+}
+
+.priority-alta {
+    background-color: #fd7e14;
+    color: white;
+}
+
+.priority-crítica {
+    background-color: #dc3545;
+    color: white;
+}
+
+.task-desc {
+    color: var(--text-secondary);
+    margin-bottom: 15px;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.task-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+}
+
+.task-responsible {
+    font-weight: bold;
+    color: var(--orange);
+}
+
+.task-date {
+    font-style: italic;
+}
+
+.task-notes {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid var(--border-color);
+}
+
+.task-notes h5 {
+    margin: 0 0 10px 0;
+    color: var(--text-primary);
+    font-size: 14px;
+}
+
+.task-notes ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.task-notes li {
+    color: var(--text-secondary);
+    font-size: 12px;
+    margin-bottom: 5px;
+}
+
+.task-actions {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid var(--border-color);
+}
+
+.note-form {
+    display: flex;
+    gap: 10px;
+}
+
+.note-form input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid var(--light-blue);
+    border-radius: 4px;
+    background-color: var(--dark-blue);
+    color: var(--text-primary);
+    font-size: 14px;
+}
+
+.note-form button {
+    padding: 8px 15px;
+    border: none;
+    border-radius: 4px;
+    background-color: var(--orange);
+    color: var(--dark-blue);
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.note-form button:hover {
+    background-color: #ffc107;
+}
+
+.no-tasks {
+    color: var(--text-secondary);
+    font-style: italic;
+    text-align: center;
+    padding: 20px;
+}
+
+/* Estilos para drag and drop */
+.sortable-ghost {
+    opacity: 0.4;
+}
+
+.sortable-chosen {
+    transform: rotate(5deg);
+}
+
+.sortable-drag {
+    transform: rotate(5deg);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+.tasks-container {
+    min-height: 200px;
+    padding: 10px;
+    border-radius: 8px;
+    background-color: rgba(30, 58, 95, 0.3);
+}
+
+/* Responsividade para o Kanban */
+@media (max-width: 1200px) {
+    .kanban-board {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .kanban-board {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-row {
+        flex-direction: column;
+    }
+    
+    .charts-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+/* === ESTILOS PARA A PÁGINA DO MAPA === */
+.filters-section {
+    background-color: var(--medium-blue);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.filters-section h3 {
+    color: var(--text-primary);
+    margin: 0 0 15px 0;
+    font-size: 18px;
+}
+
+.filters-container {
+    display: flex;
+    gap: 20px;
+    align-items: end;
+    flex-wrap: wrap;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.filter-group label {
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.filter-group select {
+    padding: 8px 12px;
+    border: 1px solid var(--light-blue);
+    border-radius: 4px;
+    background-color: var(--dark-blue);
+    color: var(--text-primary);
+    font-size: 14px;
+    min-width: 150px;
+    cursor: pointer;
+}
+
+.filter-group select option {
+    background-color: var(--dark-blue);
+    color: var(--text-primary);
+}
+
+.btn-apply-filters,
+.btn-clear-filters {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-size: 14px;
+}
+
+.btn-apply-filters {
+    background-color: var(--orange);
+    color: var(--dark-blue);
+}
+
+.btn-apply-filters:hover {
+    background-color: #ffc107;
+}
+
+.btn-clear-filters {
+    background-color: var(--text-secondary);
+    color: var(--dark-blue);
+}
+
+.btn-clear-filters:hover {
+    background-color: #a0aec0;
+}
+
+/* Estilos para popups do mapa */
+.property-popup {
+    font-family: 'Roboto', sans-serif;
+    max-width: 250px;
+}
+
+.property-popup h4 {
+    margin: 0 0 10px 0;
+    color: var(--dark-blue);
+    font-size: 16px;
+}
+
+.property-popup p {
+    margin: 5px 0;
+    font-size: 14px;
+    color: var(--dark-blue);
+}
+
+.property-popup strong {
+    font-weight: 600;
+}
+
+/* Responsividade para filtros */
+@media (max-width: 768px) {
+    .filters-container {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .filter-group {
+        width: 100%;
+    }
+    
+    .filter-group select {
+        min-width: 100%;
+    }
+    
+    .btn-apply-filters,
+    .btn-clear-filters {
+        width: 100%;
+        margin-top: 10px;
+    }
+}
