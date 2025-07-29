@@ -1,13 +1,14 @@
 import json
 import datetime
 import requests
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from collections import Counter
+from functools import wraps
 
 app = Flask(__name__)
 app.secret_key = 'baggio_portal_secret_key_12345'
 
-# --- Funções de Gestão de Dados (sem alterações) ---
+# --- Funções de Gestão de Dados ---
 def carregar_dados(ficheiro):
     try:
         with open(ficheiro, 'r', encoding='utf-8') as f:
@@ -19,10 +20,26 @@ def guardar_dados(dados, ficheiro):
     with open(ficheiro, 'w', encoding='utf-8') as f:
         json.dump(dados, f, indent=4, ensure_ascii=False)
 
-# --- Rotas de Autenticação (sem alterações) ---
+# --- Decorador de Login ---
+def login_obrigatorio(role=None):
+    def decorator(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            if 'username' not in session:
+                flash('Acesso negado. Por favor, faça o login.', 'warning')
+                return redirect(url_for('login'))
+            if role and session.get('role') not in role:
+                flash('Você não tem permissão para aceder a esta funcionalidade.', 'danger')
+                return redirect(url_for('admin_portal'))
+            return f(*args, **kwargs)
+        return wrapper
+    return decorator
+
+# --- Rotas de Autenticação ---
 @app.route('/')
 def home():
-    if 'username' in session: return redirect(url_for('admin_portal'))
+    if 'username' in session:
+        return redirect(url_for('admin_portal'))
     return redirect(url_for('login'))
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -46,22 +63,75 @@ def logout():
     flash('Sessão encerrada com segurança.', 'info')
     return redirect(url_for('login'))
 
-# --- Decorador de Login (sem alterações) ---
-def login_obrigatorio(role=None):
-    def decorator(f):
-        def wrapper(*args, **kwargs):
-            if 'username' not in session:
-                flash('Acesso negado. Por favor, faça o login.', 'warning')
-                return redirect(url_for('login'))
-            if role and session.get('role') not in role:
-                flash('Você não tem permissão para aceder a esta funcionalidade.', 'danger')
-                return redirect(url_for('admin_portal'))
-            return f(*args, **kwargs)
-        wrapper.__name__ = f.__name__
-        return wrapper
-    return decorator
+# --- API Endpoints ---
+@app.route('/api/map-data')
+@login_obrigatorio()
+def api_map_data():
+    try:
+        api_url = "https://sandbox.properfy.com.br/api/property/property"
+        headers = {"Authorization": "Bearer ac216f84-8e3f-4349-9ffa-884748149b89"}
+        params = {"page": 1, "size": 5000}
+        
+        response = requests.get(api_url, headers=headers, params=params, timeout=30)
+        response.raise_for_status()
+        
+        properties = response.json().get('content', [])
+        filtered_properties = []
+        
+        for prop in properties:
+            lat = prop.get('dcmAddressLatitude')
+            lng = prop.get('dcmAddressLongitude')
+            
+            if lat and lng:
+                try:
+                    lat = float(lat)
+                    lng = float(lng)
+                    if (-33.75 <= lat <= -22.52) and (-57.65 <= lng <= -48.02):
+                        filtered_properties.append(prop)
+                except (ValueError, TypeError):
+                    continue
+        
+        return jsonify(filtered_properties)
+    
+    except requests.exceptions.Timeout:
+        app.logger.error("API Timeout")
+        return jsonify({"error": "A API demorou muito para responder"}), 504
+    except requests.exceptions.RequestException as e:
+        app.logger.error(f"API Request Error: {str(e)}")
+        return jsonify({"error": f"Erro de conexão: {str(e)}"}), 502
+    except Exception as e:
+        app.logger.error(f"Unexpected Error: {str(e)}")
+        return jsonify({"error": f"Erro inesperado: {str(e)}"}), 500
 
-# --- Rotas do Painel ---
+@app.route('/api/map-stats')
+@login_obrigatorio()
+def api_map_stats():
+    try:
+        api_url = "https://sandbox.properfy.com.br/api/property/property"
+        headers = {"Authorization": "Bearer ac216f84-8e3f-4349-9ffa-884748149b89"}
+        params = {"page": 1, "size": 5000}
+        
+        response = requests.get(api_url, headers=headers, params=params, timeout=30)
+        response.raise_for_status()
+        
+        properties = response.json().get('content', [])
+        api_stats = {
+            "total_properties": len(properties),
+            "by_type": Counter(prop.get('chrType', 'N/A') for prop in properties),
+            "by_transaction": Counter(prop.get('chrTransactionType', 'N/A') for prop in properties),
+            "error": None
+        }
+        
+        return jsonify(api_stats)
+    
+    except requests.exceptions.Timeout:
+        return jsonify({"error": "Timeout ao acessar a API"}), 504
+    except requests.exceptions.RequestException as e:
+        return jsonify({"error": f"Erro de conexão: {str(e)}"}), 502
+    except Exception as e:
+        return jsonify({"error": f"Erro inesperado: {str(e)}"}), 500
+
+# --- Rotas Principais ---
 @app.route('/admin')
 @login_obrigatorio()
 def admin_portal():
@@ -70,156 +140,112 @@ def admin_portal():
 @app.route('/mapa')
 @login_obrigatorio()
 def mapa():
-    curitiba_coords = [-25.4284, -49.2733]
-    
-    # Configuração da API
-    api_url = "https://sandbox.properfy.com.br/api/property/property"
-    headers = {
-        "Authorization": "Bearer ac216f84-8e3f-4349-9ffa-884748149b89"
-    }
-    params = {
-        "page": 1,
-        "size": 5000
-    }
-    
-    properties_data = []
-    api_stats = {
-        "total_properties": 0,
-        "by_type": {},
-        "by_transaction": {},
-        "by_facilities": {},
-        "error": None
-    }
-    
-    try:
-        # Fazer a chamada à API
-        response = requests.get(api_url, headers=headers, params=params, timeout=10)
-        
-        if response.status_code == 200:
-            data = response.json()
-            
-            # Processar os dados recebidos
-            if 'content' in data:
-                properties_data = data['content']
-                api_stats["total_properties"] = len(properties_data)
-                
-                # Estatísticas por tipo
-                type_counts = Counter(prop.get('chrType', 'N/A') for prop in properties_data)
-                api_stats["by_type"] = dict(type_counts)
-                
-                # Estatísticas por tipo de transação
-                transaction_counts = Counter(prop.get('chrTransactionType', 'N/A') for prop in properties_data)
-                api_stats["by_transaction"] = dict(transaction_counts)
-                
-                # Estatísticas por facilities (se existir)
-                all_facilities = []
-                for prop in properties_data:
-                    facilities = prop.get('facilities', [])
-                    if isinstance(facilities, list):
-                        all_facilities.extend(facilities)
-                
-                facility_counts = Counter(all_facilities)
-                api_stats["by_facilities"] = dict(facility_counts.most_common(10))  # Top 10 facilities
-                
-                # Filtrar apenas propriedades da região Sul do Brasil
-                # Estados da região Sul: RS, SC, PR
-                sul_states = ['RS', 'SC', 'PR']
-                filtered_properties = []
-                
-                for prop in properties_data:
-                    # Verificar se tem coordenadas válidas
-                    lat = prop.get('dcmAddressLatitude')
-                    lng = prop.get('dcmAddressLongitude')
-                    
-                    if lat and lng:
-                        try:
-                            lat = float(lat)
-                            lng = float(lng)
-                            
-                            # Verificar se está na região Sul (aproximadamente)
-                            # RS: lat entre -33.75 e -27.08, lng entre -57.65 e -49.69
-                            # SC: lat entre -29.35 e -25.96, lng entre -53.84 e -48.30
-                            # PR: lat entre -26.72 e -22.52, lng entre -54.62 e -48.02
-                            if (-33.75 <= lat <= -22.52) and (-57.65 <= lng <= -48.02):
-                                filtered_properties.append(prop)
-                        except (ValueError, TypeError):
-                            continue
-                
-                properties_data = filtered_properties
-                api_stats["total_properties"] = len(properties_data)
-                
-        else:
-            api_stats["error"] = f"Erro na API: {response.status_code}"
-            
-    except requests.exceptions.RequestException as e:
-        api_stats["error"] = f"Erro de conexão: {str(e)}"
-    except Exception as e:
-        api_stats["error"] = f"Erro inesperado: {str(e)}"
-    
-    return render_template('mapa.html', 
-                         default_coords=curitiba_coords,
-                         properties=properties_data,
-                         api_stats=api_stats)
+    return render_template('mapa.html', default_coords=[-25.4284, -49.2733])
 
-# --- Rotas do Sistema de Chamados de TI (ATUALIZADO) ---
-@app.route('/chamado_ti')
+@app.route('/imoveis')
 @login_obrigatorio()
-def chamado_ti():
-    tickets = carregar_dados('tickets.json')
+def imoveis():
+    try:
+        api_url = "https://sandbox.properfy.com.br/api/property/property"
+        headers = {"Authorization": "Bearer ac216f84-8e3f-4349-9ffa-884748149b89"}
+        params = {"page": 1, "size": 5000}
+        
+        response = requests.get(api_url, headers=headers, params=params, timeout=30)
+        response.raise_for_status()
+        
+        properties = response.json().get('content', [])
+        stats = {
+            "total": len(properties),
+            "by_name": Counter(prop.get('chrName', 'N/A') for prop in properties),
+            "by_active": Counter('Ativo' if prop.get('isActive') else 'Inativo' for prop in properties),
+            "by_state": Counter(prop.get('address', {}).get('state', 'N/A') for prop in properties),
+            "error": None
+        }
+        
+    except Exception as e:
+        stats = {"error": str(e)}
     
-    # --- Cálculos para os Indicadores ---
-    # 1. Contadores Gerais
-    total_tickets = len(tickets)
-    status_counts = Counter(t['status'] for t in tickets)
+    return render_template('imoveis.html', stats=stats)
+
+@app.route('/crm')
+@login_obrigatorio()
+def crm():
+    try:
+        api_url = "https://sandbox.properfy.com.br/api/crm/lead"
+        headers = {"Authorization": "Bearer ac216f84-8e3f-4349-9ffa-884748149b89"}
+        params = {"filter": "", "size": 500}
+        
+        response = requests.get(api_url, headers=headers, params=params, timeout=30)
+        response.raise_for_status()
+        
+        leads = response.json().get('content', [])
+        stats = {
+            "total": len(leads),
+            "by_name": Counter(lead.get('chrName', 'N/A') for lead in leads),
+            "by_channel": Counter(lead.get('chrAcquisitionChannel', 'N/A') for lead in leads),
+            "error": None
+        }
+        
+    except Exception as e:
+        stats = {"error": str(e)}
     
-    # 2. Gráfico de Status (Pizza)
-    chart_status_labels = list(status_counts.keys())
-    chart_status_data = list(status_counts.values())
+    return render_template('crm.html', stats=stats)
 
-    # 3. Gráfico de Chamados por Mês (Barras)
-    chamados_por_mes = Counter(datetime.datetime.strptime(t['data_criacao'], "%d/%m/%Y %H:%M").strftime("%Y-%m") for t in tickets)
-    # Ordenar os meses para exibição correta
-    meses_ordenados = sorted(chamados_por_mes.keys())
-    chart_monthly_labels = [datetime.datetime.strptime(m, "%Y-%m").strftime("%b/%y") for m in meses_ordenados]
-    chart_monthly_data = [chamados_por_mes[m] for m in meses_ordenados]
-
-    # 4. Gráfico de Criadores de Tickets (Donut)
-    criadores_counts = Counter(t['criado_por'] for t in tickets)
-    chart_creators_labels = list(criadores_counts.keys())
-    chart_creators_data = list(criadores_counts.values())
-
-    # Organiza os tickets para o quadro Kanban
-    board = {
-        "Aberto": [t for t in tickets if t['status'] == 'Aberto'],
-        "Em Andamento": [t for t in tickets if t['status'] == 'Em Andamento'],
-        "Concluído": [t for t in tickets if t['status'] == 'Concluído']
-    }
+@app.route('/manutencao')
+@login_obrigatorio()
+def manutencao():
+    try:
+        api_url = "https://sandbox.properfy.com.br/api/property/maintenance/"
+        headers = {"Authorization": "Bearer ac216f84-8e3f-4349-9ffa-884748149b89"}
+        
+        response = requests.get(api_url, headers=headers, timeout=30)
+        response.raise_for_status()
+        
+        maintenances = response.json()
+        stats = {
+            "total": len(maintenances),
+            "by_status": Counter(maint.get('chrStatus', 'N/A') for maint in maintenances),
+            "by_responsible": Counter(maint.get('responsible', 'N/A') for maint in maintenances),
+            "by_category": Counter(maint.get('chrCategoryLabel', 'N/A') for maint in maintenances),
+            "by_priority": Counter(maint.get('chrPriority', 'N/A') for maint in maintenances),
+            "by_requester": Counter(maint.get('chrRequester', 'N/A') for maint in maintenances),
+            "error": None
+        }
+        
+        # Calculate average time
+        total_seconds = 0
+        completed_count = 0
+        
+        for maint in maintenances:
+            if maint.get('dteRequest') and maint.get('dteConclusion'):
+                try:
+                    start = datetime.datetime.strptime(maint['dteRequest'], "%Y-%m-%dT%H:%M:%S")
+                    end = datetime.datetime.strptime(maint['dteConclusion'], "%Y-%m-%dT%H:%M:%S")
+                    total_seconds += (end - start).total_seconds()
+                    completed_count += 1
+                except:
+                    continue
+        
+        if completed_count > 0:
+            avg_seconds = total_seconds / completed_count
+            stats['avg_time'] = str(datetime.timedelta(seconds=avg_seconds))
+        else:
+            stats['avg_time'] = "N/A"
+            
+    except Exception as e:
+        stats = {"error": str(e)}
     
-    return render_template(
-        'chamado_ti.html', 
-        board=board, 
-        user_role=session.get('role'),
-        total_tickets=total_tickets,
-        status_counts=status_counts,
-        chart_status_labels=chart_status_labels,
-        chart_status_data=chart_status_data,
-        chart_monthly_labels=chart_monthly_labels,
-        chart_monthly_data=chart_monthly_data,
-        chart_creators_labels=chart_creators_labels,
-        chart_creators_data=chart_creators_data
-    )
+    return render_template('manutencao.html', stats=stats)
 
-# --- Rotas do Sistema Kanban de TI (NOVO) ---
+# --- Rotas do Sistema de TI ---
 @app.route('/ti')
 @login_obrigatorio(role=['ti_admin'])
 def ti_kanban():
     tasks = carregar_dados('tasks.json')
     
-    # --- Cálculos para os Indicadores ---
     total_tasks = len(tasks)
     status_counts = Counter(t['status'] for t in tasks)
     
-    # Gráficos
     chart_status_labels = list(status_counts.keys())
     chart_status_data = list(status_counts.values())
     
@@ -231,7 +257,6 @@ def ti_kanban():
     chart_priority_labels = list(priority_counts.keys())
     chart_priority_data = list(priority_counts.values())
 
-    # Organiza as tarefas para o quadro Kanban
     board = {
         "Backlog": [t for t in tasks if t['status'] == 'Backlog'],
         "Priorizadas": [t for t in tasks if t['status'] == 'Priorizadas'],
@@ -287,7 +312,7 @@ def mover_tarefa():
             break
     
     guardar_dados(tasks, 'tasks.json')
-    return '', 200
+    return jsonify({"success": True})
 
 @app.route('/ti/add_nota', methods=['POST'])
 @login_obrigatorio(role=['ti_admin'])
@@ -303,23 +328,68 @@ def add_nota_tarefa():
             break
     
     guardar_dados(tasks, 'tasks.json')
-    flash('Nota adicionada à tarefa.', 'info')
-    return redirect(url_for('ti_kanban'))
+    return jsonify({"success": True})
 
-# --- Rotas de Ações de Tickets (sem alterações) ---
+# --- Rotas de Chamados de TI ---
+@app.route('/chamado_ti')
+@login_obrigatorio()
+def chamado_ti():
+    tickets = carregar_dados('tickets.json')
+    
+    total_tickets = len(tickets)
+    status_counts = Counter(t['status'] for t in tickets)
+    
+    chart_status_labels = list(status_counts.keys())
+    chart_status_data = list(status_counts.values())
+
+    chamados_por_mes = Counter(
+        datetime.datetime.strptime(t['data_criacao'], "%d/%m/%Y %H:%M").strftime("%Y-%m") 
+        for t in tickets
+    )
+    meses_ordenados = sorted(chamados_por_mes.keys())
+    chart_monthly_labels = [datetime.datetime.strptime(m, "%Y-%m").strftime("%b/%y") for m in meses_ordenados]
+    chart_monthly_data = [chamados_por_mes[m] for m in meses_ordenados]
+
+    criadores_counts = Counter(t['criado_por'] for t in tickets)
+    chart_creators_labels = list(criadores_counts.keys())
+    chart_creators_data = list(criadores_counts.values())
+
+    board = {
+        "Aberto": [t for t in tickets if t['status'] == 'Aberto'],
+        "Em Andamento": [t for t in tickets if t['status'] == 'Em Andamento'],
+        "Concluído": [t for t in tickets if t['status'] == 'Concluído']
+    }
+    
+    return render_template(
+        'chamado_ti.html', 
+        board=board, 
+        user_role=session.get('role'),
+        total_tickets=total_tickets,
+        status_counts=status_counts,
+        chart_status_labels=chart_status_labels,
+        chart_status_data=chart_status_data,
+        chart_monthly_labels=chart_monthly_labels,
+        chart_monthly_data=chart_monthly_data,
+        chart_creators_labels=chart_creators_labels,
+        chart_creators_data=chart_creators_data
+    )
+
 @app.route('/chamado_ti/novo', methods=['POST'])
 @login_obrigatorio()
 def novo_chamado():
     tickets = carregar_dados('tickets.json')
     novo_ticket = {
-        "id": len(tickets) + 1, "titulo": request.form['titulo'], "descricao": request.form['descricao'],
-        "criado_por": session['username'], "data_criacao": datetime.datetime.now().strftime("%d/%m/%Y %H:%M"),
-        "status": "Aberto", "notas": []
+        "id": len(tickets) + 1,
+        "titulo": request.form['titulo'],
+        "descricao": request.form['descricao'],
+        "criado_por": session['username'],
+        "data_criacao": datetime.datetime.now().strftime("%d/%m/%Y %H:%M"),
+        "status": "Aberto",
+        "notas": []
     }
     tickets.append(novo_ticket)
     guardar_dados(tickets, 'tickets.json')
-    flash('Chamado de TI criado com sucesso!', 'success')
-    return redirect(url_for('chamado_ti'))
+    return jsonify({"success": True})
 
 @app.route('/chamado_ti/mover', methods=['POST'])
 @login_obrigatorio(role=['ti_admin'])
@@ -327,15 +397,16 @@ def mover_chamado():
     ticket_id = int(request.form['ticket_id'])
     novo_status = request.form['novo_status']
     tickets = carregar_dados('tickets.json')
+    
     for ticket in tickets:
         if ticket['id'] == ticket_id:
             ticket['status'] = novo_status
             nota = f"Status alterado para '{novo_status}' por {session['username']} em {datetime.datetime.now().strftime('%d/%m/%Y %H:%M')}."
             ticket.setdefault('notas', []).append(nota)
             break
+    
     guardar_dados(tickets, 'tickets.json')
-    flash('Status do chamado atualizado.', 'info')
-    return redirect(url_for('chamado_ti'))
+    return jsonify({"success": True})
 
 @app.route('/chamado_ti/add_nota', methods=['POST'])
 @login_obrigatorio(role=['ti_admin'])
@@ -343,16 +414,17 @@ def add_nota_chamado():
     ticket_id = int(request.form['ticket_id'])
     nova_nota = request.form['nota']
     tickets = carregar_dados('tickets.json')
+    
     for ticket in tickets:
         if ticket['id'] == ticket_id:
             nota_formatada = f"{nova_nota} (Adicionado por {session['username']} em {datetime.datetime.now().strftime('%d/%m/%Y %H:%M')})"
             ticket.setdefault('notas', []).append(nota_formatada)
             break
+    
     guardar_dados(tickets, 'tickets.json')
-    flash('Nota adicionada ao chamado.', 'info')
-    return redirect(url_for('chamado_ti'))
+    return jsonify({"success": True})
 
-# --- Rota Genérica (sem alterações) ---
+# --- Rota Genérica ---
 @app.route('/menu/<pagina>')
 @login_obrigatorio()
 def pagina_menu(pagina):

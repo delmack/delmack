@@ -3,16 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TI - Kanban Board - Baggio Portal</title>
+    <title>Gestão TI - Kanban Board - Baggio Portal</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    <!-- Biblioteca Chart.js para os gráficos -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Biblioteca Sortable.js para drag-and-drop -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 </head>
 <body>
+    {% include 'loading.html' %}
     <div class="dashboard-container">
-        <!-- INÍCIO DA BARRA LATERAL (SIDEBAR) -->
         <aside class="sidebar">
             <div class="sidebar-header">
                 <img src="{{ url_for('static', filename='baggio-logo.png') }}" alt="Logo Baggio" class="sidebar-logo">
@@ -29,9 +27,7 @@
                 <a href="{{ url_for('pagina_menu', pagina='financeiro') }}" class="nav-item">FINANCEIRO</a>
                 <a href="{{ url_for('pagina_menu', pagina='imobiliaria') }}" class="nav-item">IMOBILIÁRIA</a>
                 <a href="{{ url_for('pagina_menu', pagina='crm') }}" class="nav-item">CRM</a>
-                {% if session.get('role') == 'ti_admin' %}
-                <a href="{{ url_for('ti_kanban') }}" class="nav-item nav-item-ti active">TI</a>
-                {% endif %}
+                <a href="{{ url_for('ti_kanban') }}" class="nav-item nav-item-ti active">GESTÃO TI</a>
                 <a href="{{ url_for('chamado_ti') }}" class="nav-item nav-item-ti">CHAMADO TI</a>
             </nav>
             <div class="sidebar-footer">
@@ -41,12 +37,10 @@
                 </div>
             </div>
         </aside>
-        <!-- FIM DA BARRA LATERAL (SIDEBAR) -->
 
-        <!-- Conteúdo Principal -->
         <main class="main-content">
             <header class="main-header">
-                <h1>TI - Gestão de Tarefas</h1>
+                <h1>Gestão de Tarefas de TI</h1>
             </header>
 
             {% with messages = get_flashed_messages(with_categories=true) %}
@@ -57,7 +51,6 @@
               {% endif %}
             {% endwith %}
 
-            <!-- Secção de Indicadores -->
             <section class="indicators-grid">
                 <div class="indicator-card">
                     <h3>Total de Tarefas</h3>
@@ -81,26 +74,24 @@
                 </div>
             </section>
 
-            <!-- Secção de Gráficos -->
             <section class="charts-grid">
-                <div class="chart-card">
+                <div class="chart-card chart-loading">
                     <h3>Status das Tarefas</h3>
                     <canvas id="statusChart"></canvas>
                 </div>
-                <div class="chart-card">
+                <div class="chart-card chart-loading">
                     <h3>Distribuição por Responsável</h3>
                     <canvas id="responsibleChart"></canvas>
                 </div>
-                <div class="chart-card">
+                <div class="chart-card chart-loading">
                     <h3>Distribuição por Prioridade</h3>
                     <canvas id="priorityChart"></canvas>
                 </div>
             </section>
 
-            <!-- Formulário para criar nova tarefa -->
             <div class="form-container">
                 <h3>Criar Nova Tarefa</h3>
-                <form action="{{ url_for('nova_tarefa_ti') }}" method="post">
+                <form action="{{ url_for('nova_tarefa_ti') }}" method="post" id="task-form">
                     <div class="form-row">
                         <input type="text" name="titulo" placeholder="Título da Tarefa" required class="form-input">
                         <select name="prioridade" required class="form-select">
@@ -122,11 +113,12 @@
                         </select>
                     </div>
                     <textarea name="descricao" placeholder="Descrição da tarefa..." required class="form-textarea"></textarea>
-                    <button type="submit" class="btn-submit-ti">CRIAR TAREFA</button>
+                    <button type="submit" class="btn-submit-ti" id="submit-btn">
+                        CRIAR TAREFA
+                    </button>
                 </form>
             </div>
 
-            <!-- Quadro Kanban -->
             <div class="kanban-board">
                 {% for status, tasks in board.items() %}
                 <div class="kanban-column">
@@ -159,7 +151,7 @@
                                 <form action="{{ url_for('add_nota_tarefa') }}" method="post" class="note-form">
                                     <input type="hidden" name="task_id" value="{{ task.id }}">
                                     <input type="text" name="nota" placeholder="Adicionar nota..." required>
-                                    <button type="submit">Salvar</button>
+                                    <button type="submit" class="btn-small">Salvar</button>
                                 </form>
                             </div>
                         </div>
@@ -173,78 +165,65 @@
         </main>
     </div>
 
-    <!-- Scripts para os gráficos e drag-and-drop -->
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // Dados para os gráficos
-            const statusLabels = {{ chart_status_labels|tojson }};
-            const statusData = {{ chart_status_data|tojson }};
-            const responsibleLabels = {{ chart_responsible_labels|tojson }};
-            const responsibleData = {{ chart_responsible_data|tojson }};
-            const priorityLabels = {{ chart_priority_labels|tojson }};
-            const priorityData = {{ chart_priority_data|tojson }};
-            
-            const chartColors = ['#f9a826', '#1e3a5f', '#28a745', '#8892b0', '#ff6f00'];
-
-            // Gráfico de Status
-            new Chart(document.getElementById('statusChart'), {
-                type: 'pie',
-                data: {
-                    labels: statusLabels,
-                    datasets: [{
-                        data: statusData,
-                        backgroundColor: chartColors,
-                        borderColor: '#0e203e'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize charts
+            const statusChart = new Chart(
+                document.getElementById('statusChart'), 
+                {
+                    type: 'pie',
+                    data: {
+                        labels: {{ chart_status_labels|tojson }},
+                        datasets: [{
+                            data: {{ chart_status_data|tojson }},
+                            backgroundColor: ['#f9a826', '#1e3a5f', '#28a745', '#8892b0']
+                        }]
+                    }
                 }
-            });
+            );
 
-            // Gráfico de Responsáveis
-            new Chart(document.getElementById('responsibleChart'), {
-                type: 'doughnut',
-                data: {
-                    labels: responsibleLabels,
-                    datasets: [{
-                        data: responsibleData,
-                        backgroundColor: chartColors,
-                        borderColor: '#0e203e'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false
+            const responsibleChart = new Chart(
+                document.getElementById('responsibleChart'), 
+                {
+                    type: 'doughnut',
+                    data: {
+                        labels: {{ chart_responsible_labels|tojson }},
+                        datasets: [{
+                            data: {{ chart_responsible_data|tojson }},
+                            backgroundColor: ['#f9a826', '#1e3a5f', '#28a745', '#8892b0']
+                        }]
+                    }
                 }
-            });
+            );
 
-            // Gráfico de Prioridades
-            new Chart(document.getElementById('priorityChart'), {
-                type: 'bar',
-                data: {
-                    labels: priorityLabels,
-                    datasets: [{
-                        label: 'Nº de Tarefas',
-                        data: priorityData,
-                        backgroundColor: '#1e3a5f',
-                        borderColor: '#f9a826',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true
+            const priorityChart = new Chart(
+                document.getElementById('priorityChart'), 
+                {
+                    type: 'bar',
+                    data: {
+                        labels: {{ chart_priority_labels|tojson }},
+                        datasets: [{
+                            label: 'Nº de Tarefas',
+                            data: {{ chart_priority_data|tojson }},
+                            backgroundColor: '#1e3a5f',
+                            borderColor: '#f9a826',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: { beginAtZero: true }
                         }
                     }
                 }
+            );
+
+            // Remove loading classes from charts
+            document.querySelectorAll('.chart-loading').forEach(el => {
+                el.classList.remove('chart-loading');
             });
 
-            // Configuração do Drag and Drop
+            // Initialize Sortable for drag and drop
             const columns = document.querySelectorAll('.tasks-container');
             columns.forEach(column => {
                 new Sortable(column, {
@@ -253,30 +232,100 @@
                     ghostClass: 'sortable-ghost',
                     chosenClass: 'sortable-chosen',
                     dragClass: 'sortable-drag',
-                    onEnd: function (evt) {
+                    onStart: () => showLoading(),
+                    onEnd: async function(evt) {
                         const taskId = evt.item.getAttribute('data-task-id');
                         const newStatus = evt.to.getAttribute('data-status');
                         
-                        // Enviar requisição para atualizar o status da tarefa
-                        fetch('/ti/mover_tarefa', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/x-www-form-urlencoded',
-                            },
-                            body: `task_id=${taskId}&novo_status=${encodeURIComponent(newStatus)}`
-                        })
-                        .then(response => {
+                        try {
+                            const response = await fetch('/ti/mover_tarefa', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/x-www-form-urlencoded',
+                                },
+                                body: `task_id=${taskId}&novo_status=${encodeURIComponent(newStatus)}`
+                            });
+                            
                             if (!response.ok) {
-                                // Se houver erro, reverter a mudança
-                                evt.from.appendChild(evt.item);
-                                alert('Erro ao mover a tarefa. Tente novamente.');
+                                throw new Error('Falha ao mover tarefa');
                             }
-                        })
-                        .catch(error => {
-                            // Se houver erro, reverter a mudança
+                        } catch (error) {
+                            console.error('Error:', error);
                             evt.from.appendChild(evt.item);
                             alert('Erro ao mover a tarefa. Tente novamente.');
+                        } finally {
+                            hideLoading();
+                        }
+                    }
+                });
+            });
+
+            // Task form submission
+            const taskForm = document.getElementById('task-form');
+            const submitBtn = document.getElementById('submit-btn');
+            
+            taskForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = `
+                    <span class="button-spinner"></span> SALVANDO...
+                `;
+                
+                try {
+                    const formData = new FormData(taskForm);
+                    const response = await fetch(taskForm.action, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    if (!response.ok) throw new Error('Falha ao criar tarefa');
+                    
+                    const result = await response.json();
+                    if (result.success) {
+                        window.location.reload();
+                    } else {
+                        throw new Error(result.message || 'Erro desconhecido');
+                    }
+                } catch (error) {
+                    alert('Erro: ' + error.message);
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'CRIAR TAREFA';
+                }
+            });
+
+            // Note form submission
+            document.querySelectorAll('.note-form').forEach(form => {
+                form.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    const button = this.querySelector('button[type="submit"]');
+                    
+                    button.disabled = true;
+                    button.innerHTML = `
+                        <span class="button-spinner"></span>
+                    `;
+                    
+                    try {
+                        const formData = new FormData(this);
+                        const response = await fetch(this.action, {
+                            method: 'POST',
+                            body: formData
                         });
+                        
+                        if (!response.ok) throw new Error('Falha ao adicionar nota');
+                        
+                        const result = await response.json();
+                        if (result.success) {
+                            window.location.reload();
+                        } else {
+                            throw new Error(result.message || 'Erro desconhecido');
+                        }
+                    } catch (error) {
+                        alert('Erro: ' + error.message);
+                    } finally {
+                        button.disabled = false;
+                        button.textContent = 'Salvar';
                     }
                 });
             });
@@ -284,4 +333,3 @@
     </script>
 </body>
 </html>
-

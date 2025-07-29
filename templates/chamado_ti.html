@@ -5,12 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chamados de TI - Baggio Portal</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    <!-- Biblioteca Chart.js para os gráficos -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+    {% include 'loading.html' %}
     <div class="dashboard-container">
-        <!-- INÍCIO DA BARRA LATERAL (SIDEBAR ) CORRIGIDA -->
         <aside class="sidebar">
             <div class="sidebar-header">
                 <img src="{{ url_for('static', filename='baggio-logo.png') }}" alt="Logo Baggio" class="sidebar-logo">
@@ -30,7 +29,7 @@
                 {% if session.get('role') == 'ti_admin' %}
                 <a href="{{ url_for('ti_kanban') }}" class="nav-item nav-item-ti">TI</a>
                 {% endif %}
-                <a href="{{ url_for('chamado_ti') }}" class="nav-item nav-item-ti active">CHAMADO TI</a> <!-- Marca como ativo -->
+                <a href="{{ url_for('chamado_ti') }}" class="nav-item nav-item-ti active">CHAMADO TI</a>
             </nav>
             <div class="sidebar-footer">
                 <div class="user-info">
@@ -39,9 +38,7 @@
                 </div>
             </div>
         </aside>
-        <!-- FIM DA BARRA LATERAL (SIDEBAR) -->
 
-        <!-- Conteúdo Principal -->
         <main class="main-content">
             <header class="main-header">
                 <h1>Central de Suporte de TI</h1>
@@ -55,8 +52,7 @@
               {% endif %}
             {% endwith %}
 
-            <!-- Secção de Indicadores -->
-            <section class="indicators-grid">
+            <section class="indicators-grid" id="indicators-container">
                 <div class="indicator-card">
                     <h3>Total de Chamados</h3>
                     <p class="indicator-value">{{ total_tickets }}</p>
@@ -75,38 +71,37 @@
                 </div>
             </section>
 
-            <!-- Secção de Gráficos -->
             <section class="charts-grid">
-                <div class="chart-card">
+                <div class="chart-card chart-loading">
                     <h3>Status dos Chamados</h3>
                     <canvas id="statusChart"></canvas>
                 </div>
-                <div class="chart-card">
+                <div class="chart-card chart-loading">
                     <h3>Maiores Solicitantes</h3>
                     <canvas id="creatorsChart"></canvas>
                 </div>
-                <div class="chart-card chart-full-width">
+                <div class="chart-card chart-full-width chart-loading">
                     <h3>Volume Mensal de Chamados</h3>
                     <canvas id="monthlyChart"></canvas>
                 </div>
             </section>
 
-            <!-- Formulário para criar novo chamado -->
             <div class="form-container">
                 <h3>Criar Novo Chamado</h3>
-                <form action="{{ url_for('novo_chamado') }}" method="post">
+                <form action="{{ url_for('novo_chamado') }}" method="post" id="ticket-form">
                     <input type="text" name="titulo" placeholder="Título do Chamado" required class="form-input">
                     <textarea name="descricao" placeholder="Descreva o problema detalhadamente..." required class="form-textarea"></textarea>
-                    <button type="submit" class="btn-submit-ti">ABRIR CHAMADO</button>
+                    <button type="submit" class="btn-submit-ti" id="submit-btn">
+                        ABRIR CHAMADO
+                    </button>
                 </form>
             </div>
 
-            <!-- Quadro Kanban -->
             <div class="kanban-board">
                 {% for status, tickets in board.items() %}
                 <div class="kanban-column">
                     <h3 class="column-title">{{ status }}</h3>
-                    <div class="tickets-container">
+                    <div class="tickets-container" data-status="{{ status }}">
                         {% for ticket in tickets %}
                         <div class="ticket-card">
                             <h4>#{{ ticket.id }} - {{ ticket.titulo }}</h4>
@@ -131,7 +126,7 @@
                             <div class="admin-actions">
                                 <form action="{{ url_for('mover_chamado') }}" method="post" class="move-form">
                                     <input type="hidden" name="ticket_id" value="{{ ticket.id }}">
-                                    <select name="novo_status" onchange="this.form.submit()">
+                                    <select name="novo_status" class="form-select" onchange="updateTicketStatus(this)">
                                         <option value="" disabled selected>Mover para...</option>
                                         {% if status != 'Aberto' %}<option value="Aberto">Aberto</option>{% endif %}
                                         {% if status != 'Em Andamento' %}<option value="Em Andamento">Em Andamento</option>{% endif %}
@@ -141,7 +136,7 @@
                                 <form action="{{ url_for('add_nota_chamado') }}" method="post" class="note-form">
                                     <input type="hidden" name="ticket_id" value="{{ ticket.id }}">
                                     <input type="text" name="nota" placeholder="Adicionar nota..." required>
-                                    <button type="submit">Salvar</button>
+                                    <button type="submit" class="btn-small">Salvar</button>
                                 </form>
                             </div>
                             {% endif %}
@@ -156,19 +151,129 @@
         </main>
     </div>
 
-    <!-- O script para os gráficos permanece no final -->
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const statusLabels = {{ chart_status_labels|tojson }};
-            const statusData = {{ chart_status_data|tojson }};
-            const monthlyLabels = {{ chart_monthly_labels|tojson }};
-            const monthlyData = {{ chart_monthly_data|tojson }};
-            const creatorsLabels = {{ chart_creators_labels|tojson }};
-            const creatorsData = {{ chart_creators_data|tojson }};
-            const chartColors = ['#f9a826', '#1e3a5f', '#28a745', '#8892b0', '#ff6f00'];
-            new Chart(document.getElementById('statusChart'), { type: 'pie', data: { labels: statusLabels, datasets: [{ data: statusData, backgroundColor: chartColors, borderColor: '#0e203e' }] }, options: { responsive: true, maintainAspectRatio: false } });
-            new Chart(document.getElementById('creatorsChart'), { type: 'doughnut', data: { labels: creatorsLabels, datasets: [{ data: creatorsData, backgroundColor: chartColors, borderColor: '#0e203e' }] }, options: { responsive: true, maintainAspectRatio: false } });
-            new Chart(document.getElementById('monthlyChart'), { type: 'bar', data: { labels: monthlyLabels, datasets: [{ label: 'Nº de Chamados', data: monthlyData, backgroundColor: '#1e3a5f', borderColor: '#f9a826', borderWidth: 1 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } } });
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize charts
+            const statusChart = new Chart(
+                document.getElementById('statusChart'), 
+                {
+                    type: 'pie',
+                    data: {
+                        labels: {{ chart_status_labels|tojson }},
+                        datasets: [{
+                            data: {{ chart_status_data|tojson }},
+                            backgroundColor: ['#f9a826', '#1e3a5f', '#28a745']
+                        }]
+                    }
+                }
+            );
+
+            const creatorsChart = new Chart(
+                document.getElementById('creatorsChart'), 
+                {
+                    type: 'doughnut',
+                    data: {
+                        labels: {{ chart_creators_labels|tojson }},
+                        datasets: [{
+                            data: {{ chart_creators_data|tojson }},
+                            backgroundColor: ['#f9a826', '#1e3a5f', '#28a745', '#8892b0']
+                        }]
+                    }
+                }
+            );
+
+            const monthlyChart = new Chart(
+                document.getElementById('monthlyChart'), 
+                {
+                    type: 'bar',
+                    data: {
+                        labels: {{ chart_monthly_labels|tojson }},
+                        datasets: [{
+                            label: 'Nº de Chamados',
+                            data: {{ chart_monthly_data|tojson }},
+                            backgroundColor: '#1e3a5f',
+                            borderColor: '#f9a826',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: { beginAtZero: true }
+                        }
+                    }
+                }
+            );
+
+            // Remove loading classes
+            document.querySelectorAll('.chart-loading').forEach(el => {
+                el.classList.remove('chart-loading');
+            });
+
+            // Form submission
+            const ticketForm = document.getElementById('ticket-form');
+            const submitBtn = document.getElementById('submit-btn');
+            
+            ticketForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = `
+                    <span class="button-spinner"></span> PROCESSANDO...
+                `;
+                
+                try {
+                    const formData = new FormData(ticketForm);
+                    const response = await fetch(ticketForm.action, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    if (!response.ok) throw new Error('Falha ao criar chamado');
+                    
+                    const result = await response.json();
+                    if (result.success) {
+                        window.location.reload();
+                    } else {
+                        throw new Error(result.message || 'Erro desconhecido');
+                    }
+                } catch (error) {
+                    alert('Erro: ' + error.message);
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'ABRIR CHAMADO';
+                }
+            });
+
+            // Update ticket status
+            async function updateTicketStatus(selectElement) {
+                const form = selectElement.closest('form');
+                const ticketCard = form.closest('.ticket-card');
+                
+                showLoading();
+                
+                try {
+                    const formData = new FormData(form);
+                    const response = await fetch(form.action, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    if (!response.ok) throw new Error('Falha ao atualizar status');
+                    
+                    const result = await response.json();
+                    if (result.success) {
+                        window.location.reload();
+                    } else {
+                        throw new Error(result.message || 'Erro desconhecido');
+                    }
+                } catch (error) {
+                    alert('Erro: ' + error.message);
+                    hideLoading();
+                }
+            }
+
+            // Make updateTicketStatus available globally
+            window.updateTicketStatus = updateTicketStatus;
         });
     </script>
 </body>

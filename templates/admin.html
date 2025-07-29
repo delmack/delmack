@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
+    {% include 'loading.html' %}
     <div class="dashboard-container">
         <aside class="sidebar">
             <div class="sidebar-header">
@@ -14,6 +15,7 @@
                 <h3>BAGGIO PORTAL</h3>
             </div>
             <nav class="sidebar-nav">
+                <a href="{{ url_for('admin_portal') }}" class="nav-item active">PAINEL</a>
                 <a href="{{ url_for('pagina_menu', pagina='usuarios') }}" class="nav-item">USUÁRIOS</a>
                 <a href="{{ url_for('pagina_menu', pagina='imoveis') }}" class="nav-item">IMÓVEIS</a>
                 <a href="{{ url_for('mapa') }}" class="nav-item">MAPA</a>
@@ -24,7 +26,7 @@
                 <a href="{{ url_for('pagina_menu', pagina='imobiliaria') }}" class="nav-item">IMOBILIÁRIA</a>
                 <a href="{{ url_for('pagina_menu', pagina='crm') }}" class="nav-item">CRM</a>
                 {% if session.get('role') == 'ti_admin' %}
-                <a href="{{ url_for('ti_kanban') }}" class="nav-item nav-item-ti">TI</a>
+                <a href="{{ url_for('ti_kanban') }}" class="nav-item nav-item-ti">GESTÃO TI</a>
                 {% endif %}
                 <a href="{{ url_for('chamado_ti') }}" class="nav-item nav-item-ti">CHAMADO TI</a>
             </nav>
@@ -48,8 +50,19 @@
                   {% endif %}
                 {% endwith %}
                 
-                <h2>Seja bem-vindo!</h2>
-                <p>Selecione uma opção no menu à esquerda para começar a visualizar os indicadores.</p>
+                <h2>Seja bem-vindo, {{ session.get('username') }}!</h2>
+                <p>Selecione uma opção no menu à esquerda para acessar os módulos do sistema.</p>
+                
+                <div class="indicators-grid">
+                    <div class="indicator-card">
+                        <h3>Módulos Disponíveis</h3>
+                        <p class="indicator-value">12</p>
+                    </div>
+                    <div class="indicator-card">
+                        <h3>Seu Nível de Acesso</h3>
+                        <p class="indicator-value">{{ session.get('role') }}</p>
+                    </div>
+                </div>
             </section>
         </main>
     </div>

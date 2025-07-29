@@ -14,8 +14,9 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+    {% include 'loading.html' %}
     <div class="dashboard-container">
-        <!-- INÍCIO DA BARRA LATERAL (SIDEBAR ) CORRIGIDA -->
+        <!-- INÍCIO DA BARRA LATERAL (SIDEBAR) -->
         <aside class="sidebar">
             <div class="sidebar-header">
                 <img src="{{ url_for('static', filename='baggio-logo.png') }}" alt="Logo Baggio" class="sidebar-logo">
@@ -25,7 +26,7 @@
                 <a href="{{ url_for('admin_portal') }}" class="nav-item">PAINEL</a>
                 <a href="{{ url_for('pagina_menu', pagina='usuarios') }}" class="nav-item">USUÁRIOS</a>
                 <a href="{{ url_for('pagina_menu', pagina='imoveis') }}" class="nav-item">IMÓVEIS</a>
-                <a href="{{ url_for('mapa') }}" class="nav-item active">MAPA</a> <!-- Marca como ativo -->
+                <a href="{{ url_for('mapa') }}" class="nav-item active">MAPA</a>
                 <a href="{{ url_for('pagina_menu', pagina='contratos') }}" class="nav-item">CONTRATOS</a>
                 <a href="{{ url_for('pagina_menu', pagina='manutencao') }}" class="nav-item">MANUTENÇÃO</a>
                 <a href="{{ url_for('pagina_menu', pagina='pessoas') }}" class="nav-item">PESSOAS</a>
@@ -60,37 +61,28 @@
             {% endwith %}
 
             <!-- Indicadores da API -->
-            {% if api_stats.error %}
-            <div class="alert alert-danger">
-                <strong>Erro na API:</strong> {{ api_stats.error }}
-            </div>
-            {% else %}
-            <section class="indicators-grid">
-                <div class="indicator-card">
-                    <h3>Total de Imóveis</h3>
-                    <p class="indicator-value">{{ api_stats.total_properties }}</p>
+            <section class="indicators-grid" id="indicators-container">
+                <div class="indicator-card loading-indicator">
+                    <div class="loading-spinner" style="width: 30px; height: 30px; margin: 0 auto;"></div>
                 </div>
-                <div class="indicator-card">
-                    <h3>Para Venda</h3>
-                    <p class="indicator-value">{{ api_stats.by_transaction.get('SALE', 0) }}</p>
+                <div class="indicator-card loading-indicator">
+                    <div class="loading-spinner" style="width: 30px; height: 30px; margin: 0 auto;"></div>
                 </div>
-                <div class="indicator-card">
-                    <h3>Para Aluguel</h3>
-                    <p class="indicator-value">{{ api_stats.by_transaction.get('RENT', 0) }}</p>
+                <div class="indicator-card loading-indicator">
+                    <div class="loading-spinner" style="width: 30px; height: 30px; margin: 0 auto;"></div>
                 </div>
-                <div class="indicator-card">
-                    <h3>Tipos Diferentes</h3>
-                    <p class="indicator-value">{{ api_stats.by_type|length }}</p>
+                <div class="indicator-card loading-indicator">
+                    <div class="loading-spinner" style="width: 30px; height: 30px; margin: 0 auto;"></div>
                 </div>
             </section>
 
             <!-- Gráficos -->
             <section class="charts-grid">
-                <div class="chart-card">
+                <div class="chart-card chart-loading" id="transaction-chart">
                     <h3>Distribuição por Tipo de Transação</h3>
                     <canvas id="transactionChart"></canvas>
                 </div>
-                <div class="chart-card">
+                <div class="chart-card chart-loading" id="type-chart">
                     <h3>Top 5 Tipos de Imóveis</h3>
                     <canvas id="typeChart"></canvas>
                 </div>
@@ -112,52 +104,196 @@
                         <label for="typeFilter">Tipo de Imóvel:</label>
                         <select id="typeFilter">
                             <option value="">Todos</option>
-                            {% for type_name in api_stats.by_type.keys() %}
-                            <option value="{{ type_name }}">{{ type_name }}</option>
-                            {% endfor %}
+                            <!-- Options will be loaded dynamically -->
                         </select>
                     </div>
                     <button id="applyFilters" class="btn-apply-filters">Aplicar Filtros</button>
                     <button id="clearFilters" class="btn-clear-filters">Limpar Filtros</button>
                 </div>
             </section>
-            {% endif %}
 
             <section class="content-area">
-                <!-- O DIV do mapa -->
-                <div id="map"></div>
+                <div id="map" class="map-loading">
+                    <div class="loading-spinner" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);"></div>
+                </div>
             </section>
         </main>
     </div>
 
-    <!-- JS do Leaflet, MarkerCluster e o nosso script do mapa DEVEM VIR NO FINAL -->
+    <!-- JS do Leaflet, MarkerCluster e o nosso script do mapa -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // Dados dos imóveis passados do Flask
-            const properties = {{ properties|tojson }};
-            const apiStats = {{ api_stats|tojson }};
-
-            // Inicializa o mapa centrado na região Sul
-            var map = L.map('map').setView([-27.5, -51.5], 7);
-
-            // Adiciona a camada de "tiles" do OpenStreetMap ao mapa
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: '© <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            }).addTo(map);
-
-            // Grupo de marcadores com clustering
-            var markers = L.markerClusterGroup({
-                chunkedLoading: true,
-                maxClusterRadius: 50
+            showLoading();
+            
+            // Element references
+            const indicatorsContainer = document.getElementById('indicators-container');
+            const mapContainer = document.getElementById('map');
+            const transactionChartEl = document.getElementById('transactionChart');
+            const typeChartEl = document.getElementById('typeChart');
+            
+            // Initialize empty variables
+            let map;
+            let markers;
+            let allMarkers = [];
+            let propertyTypes = [];
+            
+            // Load data
+            Promise.all([
+                fetch('/api/map-data'),
+                fetch('/api/map-stats')
+            ])
+            .then(async ([propertiesRes, statsRes]) => {
+                const [properties, stats] = await Promise.all([
+                    propertiesRes.json(),
+                    statsRes.json()
+                ]);
+                
+                if (stats.error) throw new Error(stats.error);
+                
+                // Render indicators
+                renderIndicators(stats);
+                
+                // Initialize map
+                initMap(properties);
+                
+                // Initialize charts
+                initCharts(stats);
+                
+                // Populate type filter
+                populateTypeFilter(stats.by_type);
+                
+            }).catch(error => {
+                console.error('Error:', error);
+                indicatorsContainer.innerHTML = `
+                    <div class="alert alert-danger" style="grid-column: 1 / -1;">
+                        Erro ao carregar dados: ${error.message}
+                    </div>
+                `;
+            }).finally(() => {
+                hideLoading();
+                document.querySelectorAll('.chart-loading').forEach(el => {
+                    el.classList.remove('chart-loading');
+                });
+                mapContainer.classList.remove('map-loading');
             });
-
-            // Array para armazenar todos os marcadores
-            var allMarkers = [];
-
-            // Função para criar ícones personalizados baseados no tipo de transação
+            
+            function renderIndicators(stats) {
+                indicatorsContainer.innerHTML = `
+                    <div class="indicator-card">
+                        <h3>Total de Imóveis</h3>
+                        <p class="indicator-value">${stats.total_properties}</p>
+                    </div>
+                    <div class="indicator-card">
+                        <h3>Para Venda</h3>
+                        <p class="indicator-value">${stats.by_transaction.SALE || 0}</p>
+                    </div>
+                    <div class="indicator-card">
+                        <h3>Para Aluguel</h3>
+                        <p class="indicator-value">${stats.by_transaction.RENT || 0}</p>
+                    </div>
+                    <div class="indicator-card">
+                        <h3>Tipos Diferentes</h3>
+                        <p class="indicator-value">${Object.keys(stats.by_type).length}</p>
+                    </div>
+                `;
+            }
+            
+            function initMap(properties) {
+                // Initialize map centered on Curitiba
+                map = L.map('map').setView([-25.4284, -49.2733], 12);
+                
+                // Add tile layer
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: '© <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                }).addTo(map);
+                
+                // Initialize marker cluster group
+                markers = L.markerClusterGroup({
+                    chunkedLoading: true,
+                    maxClusterRadius: 50
+                });
+                
+                // Add markers
+                properties.forEach(property => {
+                    const lat = parseFloat(property.dcmAddressLatitude);
+                    const lng = parseFloat(property.dcmAddressLongitude);
+                    
+                    if (!isNaN(lat) && !isNaN(lng)) {
+                        const icon = createCustomIcon(property.chrTransactionType);
+                        const popupContent = createPopupContent(property);
+                        
+                        const marker = L.marker([lat, lng], { icon: icon })
+                            .bindPopup(popupContent);
+                        
+                        marker.propertyData = {
+                            transactionType: property.chrTransactionType,
+                            type: property.chrType
+                        };
+                        
+                        allMarkers.push(marker);
+                        markers.addLayer(marker);
+                    }
+                });
+                
+                map.addLayer(markers);
+            }
+            
+            function initCharts(stats) {
+                // Transaction chart
+                new Chart(transactionChartEl, {
+                    type: 'pie',
+                    data: {
+                        labels: ['Venda', 'Aluguel'],
+                        datasets: [{
+                            data: [stats.by_transaction.SALE || 0, stats.by_transaction.RENT || 0],
+                            backgroundColor: ['#28a745', '#007bff'],
+                            borderColor: '#0e203e'
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+                
+                // Type chart (top 5)
+                const typeEntries = Object.entries(stats.by_type)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 5);
+                
+                new Chart(typeChartEl, {
+                    type: 'bar',
+                    data: {
+                        labels: typeEntries.map(entry => entry[0]),
+                        datasets: [{
+                            label: 'Quantidade',
+                            data: typeEntries.map(entry => entry[1]),
+                            backgroundColor: '#1e3a5f',
+                            borderColor: '#f9a826',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: { y: { beginAtZero: true } }
+                    }
+                });
+            }
+            
+            function populateTypeFilter(types) {
+                const typeFilter = document.getElementById('typeFilter');
+                const sortedTypes = Object.entries(types)
+                    .sort((a, b) => b[1] - a[1]);
+                
+                sortedTypes.forEach(([typeName, count]) => {
+                    const option = document.createElement('option');
+                    option.value = typeName;
+                    option.textContent = `${typeName} (${count})`;
+                    typeFilter.appendChild(option);
+                });
+            }
+            
             function createCustomIcon(transactionType) {
                 const color = transactionType === 'SALE' ? '#28a745' : '#007bff';
                 return L.divIcon({
@@ -167,157 +303,69 @@
                     iconAnchor: [8, 8]
                 });
             }
-
-            // Função para formatar valores monetários
-            function formatCurrency(value) {
-                if (!value) return 'N/A';
-                return new Intl.NumberFormat('pt-BR', {
-                    style: 'currency',
-                    currency: 'BRL'
-                }).format(value);
-            }
-
-            // Adicionar marcadores para cada imóvel
-            properties.forEach(function(property) {
-                const lat = parseFloat(property.dcmAddressLatitude);
-                const lng = parseFloat(property.dcmAddressLongitude);
-                
-                if (!isNaN(lat) && !isNaN(lng)) {
-                    const icon = createCustomIcon(property.chrTransactionType);
-                    
-                    // Determinar o valor a exibir
-                    let valueText = 'Valor não informado';
-                    if (property.chrTransactionType === 'SALE' && property.dcmSale) {
-                        valueText = formatCurrency(property.dcmSale);
-                    } else if (property.chrTransactionType === 'RENT' && property.dcmExpectedRent) {
-                        valueText = formatCurrency(property.dcmExpectedRent);
-                    }
-
-                    const popupContent = `
-                        <div class="property-popup">
-                            <h4>${property.chrCondoName || 'Nome não informado'}</h4>
-                            <p><strong>Tipo:</strong> ${property.chrType || 'N/A'}</p>
-                            <p><strong>Transação:</strong> ${property.chrTransactionType === 'SALE' ? 'Venda' : 'Aluguel'}</p>
-                            <p><strong>Valor:</strong> ${valueText}</p>
-                            <p><strong>CEP:</strong> ${property.chrAddressPostalCode || 'N/A'}</p>
-                            ${property.facilities && property.facilities.length > 0 ? 
-                                `<p><strong>Facilidades:</strong> ${property.facilities.slice(0, 3).join(', ')}${property.facilities.length > 3 ? '...' : ''}</p>` : 
-                                ''
-                            }
-                        </div>
-                    `;
-
-                    const marker = L.marker([lat, lng], { icon: icon })
-                        .bindPopup(popupContent);
-                    
-                    // Adicionar propriedades customizadas para filtragem
-                    marker.propertyData = {
-                        transactionType: property.chrTransactionType,
-                        type: property.chrType
-                    };
-
-                    allMarkers.push(marker);
-                    markers.addLayer(marker);
+            
+            function createPopupContent(property) {
+                let valueText = 'Valor não informado';
+                if (property.chrTransactionType === 'SALE' && property.dcmSale) {
+                    valueText = new Intl.NumberFormat('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL'
+                    }).format(property.dcmSale);
+                } else if (property.chrTransactionType === 'RENT' && property.dcmExpectedRent) {
+                    valueText = new Intl.NumberFormat('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL'
+                    }).format(property.dcmExpectedRent);
                 }
-            });
-
-            // Adicionar o grupo de marcadores ao mapa
-            map.addLayer(markers);
-
-            // Gráficos
-            if (!apiStats.error) {
-                // Gráfico de Transações
-                const transactionLabels = Object.keys(apiStats.by_transaction);
-                const transactionData = Object.values(apiStats.by_transaction);
                 
-                new Chart(document.getElementById('transactionChart'), {
-                    type: 'pie',
-                    data: {
-                        labels: transactionLabels.map(t => t === 'SALE' ? 'Venda' : 'Aluguel'),
-                        datasets: [{
-                            data: transactionData,
-                            backgroundColor: ['#28a745', '#007bff'],
-                            borderColor: '#0e203e'
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false
-                    }
-                });
-
-                // Gráfico de Tipos (Top 5)
-                const typeEntries = Object.entries(apiStats.by_type)
-                    .sort((a, b) => b[1] - a[1])
-                    .slice(0, 5);
-                
-                const typeLabels = typeEntries.map(entry => entry[0]);
-                const typeData = typeEntries.map(entry => entry[1]);
-                
-                new Chart(document.getElementById('typeChart'), {
-                    type: 'bar',
-                    data: {
-                        labels: typeLabels,
-                        datasets: [{
-                            label: 'Quantidade',
-                            data: typeData,
-                            backgroundColor: '#1e3a5f',
-                            borderColor: '#f9a826',
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            y: {
-                                beginAtZero: true
-                            }
+                return `
+                    <div class="property-popup">
+                        <h4>${property.chrCondoName || 'Nome não informado'}</h4>
+                        <p><strong>Tipo:</strong> ${property.chrType || 'N/A'}</p>
+                        <p><strong>Transação:</strong> ${property.chrTransactionType === 'SALE' ? 'Venda' : 'Aluguel'}</p>
+                        <p><strong>Valor:</strong> ${valueText}</p>
+                        <p><strong>CEP:</strong> ${property.chrAddressPostalCode || 'N/A'}</p>
+                        ${property.facilities && property.facilities.length > 0 ? 
+                            `<p><strong>Facilidades:</strong> ${property.facilities.slice(0, 3).join(', ')}${property.facilities.length > 3 ? '...' : ''}</p>` : 
+                            ''
                         }
-                    }
-                });
+                    </div>
+                `;
             }
-
-            // Funcionalidade de filtros
+            
+            // Filter functionality
+            document.getElementById('applyFilters').addEventListener('click', applyFilters);
+            document.getElementById('clearFilters').addEventListener('click', clearFilters);
+            
             function applyFilters() {
                 const transactionFilter = document.getElementById('transactionFilter').value;
                 const typeFilter = document.getElementById('typeFilter').value;
-
-                // Limpar marcadores atuais
+                
                 markers.clearLayers();
-
-                // Filtrar e adicionar marcadores
-                allMarkers.forEach(function(marker) {
+                
+                allMarkers.forEach(marker => {
                     let showMarker = true;
-
+                    
                     if (transactionFilter && marker.propertyData.transactionType !== transactionFilter) {
                         showMarker = false;
                     }
-
+                    
                     if (typeFilter && marker.propertyData.type !== typeFilter) {
                         showMarker = false;
                     }
-
+                    
                     if (showMarker) {
                         markers.addLayer(marker);
                     }
                 });
             }
-
+            
             function clearFilters() {
                 document.getElementById('transactionFilter').value = '';
                 document.getElementById('typeFilter').value = '';
-                
-                // Mostrar todos os marcadores
                 markers.clearLayers();
-                allMarkers.forEach(function(marker) {
-                    markers.addLayer(marker);
-                });
+                allMarkers.forEach(marker => markers.addLayer(marker));
             }
-
-            // Event listeners para os filtros
-            document.getElementById('applyFilters').addEventListener('click', applyFilters);
-            document.getElementById('clearFilters').addEventListener('click', clearFilters);
         });
     </script>
 </body>

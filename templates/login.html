@@ -10,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
 </head>
 <body>
+    {% include 'loading.html' %}
     <div class="login-container">
         <div class="login-form">
             <img src="{{ url_for('static', filename='baggio-logo.png' ) }}" alt="Logo Baggio Imobiliária" class="logo">
@@ -24,16 +25,31 @@
               {% endif %}
             {% endwith %}
 
-            <form method="post" action="{{ url_for('login') }}">
+            <form method="post" action="{{ url_for('login') }}" id="login-form">
                 <div class="input-group">
                     <input type="text" id="username" name="username" required placeholder="Utilizador">
                 </div>
                 <div class="input-group">
                     <input type="password" id="password" name="password" required placeholder="Password">
                 </div>
-                <button type="submit" class="btn-login">ACEDER AO PORTAL</button>
+                <button type="submit" class="btn-login" id="login-btn">ACEDER AO PORTAL</button>
             </form>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.getElementById('login-form');
+            const loginBtn = document.getElementById('login-btn');
+            
+            loginForm.addEventListener('submit', function() {
+                loginBtn.disabled = true;
+                loginBtn.innerHTML = `
+                    <span class="button-spinner"></span> AUTENTICANDO...
+                `;
+                showLoading();
+            });
+        });
+    </script>
 </body>
 </html>
