@@ -10,6 +10,12 @@ import random
 app = Flask(__name__)
 app.secret_key = 'baggio_portal_secret_key_12345'
 
+# --- Dicionário de Cores Centralizado ---
+PRIORITY_COLORS = {
+    "Baixa": "#28a745", "Média": "#ffc107", "Alta": "#fd7e14",
+    "Crítica": "#dc3545", "N/A": "#8892b0"
+}
+
 # --- Funções Auxiliares de Gestão de Dados ---
 def carregar_dados(ficheiro):
     try:
@@ -60,40 +66,23 @@ def logout():
     flash('Sessão encerrada com segurança.', 'info')
     return redirect(url_for('login'))
 
-# --- Endpoints de API Interna (Backend para Frontend) ---
-@app.route('/api/proxy/map-data')
-@login_obrigatorio()
-def proxy_map_data():
-    # ... (código da função proxy_map_data)
-    return jsonify([]) # Simulação para evitar erros de API externa
-
-@app.route('/api/proxy/map-stats')
-@login_obrigatorio()
-def proxy_map_stats():
-    # ... (código da função proxy_map_stats)
-    return jsonify({}) # Simulação
-
-@app.route('/api/proxy/maintenance')
-@login_obrigatorio()
-def proxy_maintenance_data():
-    # ... (código da função proxy_maintenance_data)
-    return jsonify([]) # Simulação
-
 # --- Rotas Principais da Aplicação ---
 @app.route('/admin')
 @login_obrigatorio()
 def admin_portal(): return render_template('admin.html')
 
-# CORREÇÃO: Rota /mapa restaurada
+# --- ROTAS RESTAURADAS PARA MAPA E MANUTENÇÃO ---
 @app.route('/mapa')
 @login_obrigatorio()
 def mapa():
+    # Por enquanto, renderiza um template simples para evitar erros.
+    # A lógica de API pode ser adicionada aqui depois.
     return render_template('mapa.html')
 
-# CORREÇÃO: Rota /manutencao restaurada
 @app.route('/manutencao')
 @login_obrigatorio()
 def manutencao():
+    # Renderiza um template simples para a página de manutenção.
     return render_template('manutencao.html')
 
 # --- Rotas do Módulo de Gestão de TI (Kanban) ---
@@ -115,6 +104,7 @@ def ti_kanban():
         if task['status'] == 'Concluded':
             time_by_priority[task.get('prioridade', 'N/A')].append(random.uniform(1, 48))
     avg_time_by_priority = {p: sum(times)/len(times) for p, times in time_by_priority.items()}
+    priority_chart_colors = [PRIORITY_COLORS.get(p, PRIORITY_COLORS["N/A"]) for p in priority_counts.keys()]
     
     return render_template(
         'ti_kanban.html',
@@ -122,6 +112,7 @@ def ti_kanban():
         chart_status_labels=list(status_counts.keys()), chart_status_data=list(status_counts.values()),
         chart_responsible_labels=list(responsible_counts.keys()), chart_responsible_data=list(responsible_counts.values()),
         chart_priority_labels=list(priority_counts.keys()), chart_priority_data=list(priority_counts.values()),
+        chart_priority_colors=priority_chart_colors,
         chart_time_priority_labels=list(avg_time_by_priority.keys()), chart_time_priority_data=[round(v, 2) for v in avg_time_by_priority.values()]
     )
 
@@ -129,13 +120,7 @@ def ti_kanban():
 @login_obrigatorio(role='ti_admin')
 def nova_tarefa_ti():
     tasks = carregar_dados('tasks.json')
-    nova_task = {
-        "id": (tasks[-1]['id'] + 1) if tasks else 1,
-        "titulo": request.form['titulo'], "descricao": request.form['descricao'],
-        "responsavel": request.form['responsavel'], "prioridade": request.form['prioridade'],
-        "status": request.form['status'], "criado_por": session['username'],
-        "data_criacao": datetime.datetime.now().strftime("%d/%m/%Y %H:%M"), "notas": []
-    }
+    nova_task = { "id": (tasks[-1]['id'] + 1) if tasks else 1, "titulo": request.form['titulo'], "descricao": request.form['descricao'], "responsavel": request.form['responsavel'], "prioridade": request.form['prioridade'], "status": request.form['status'], "criado_por": session['username'], "data_criacao": datetime.datetime.now().strftime("%d/%m/%Y %H:%M"), "notas": [] }
     tasks.append(nova_task)
     guardar_dados(tasks, 'tasks.json')
     flash('Tarefa criada com sucesso!', 'success')
@@ -147,9 +132,7 @@ def mover_tarefa():
     task_id, novo_status = int(request.form['task_id']), request.form['novo_status']
     tasks = carregar_dados('tasks.json')
     for task in tasks:
-        if task.get('id') == task_id:
-            task['status'] = novo_status
-            break
+        if task.get('id') == task_id: task['status'] = novo_status; break
     guardar_dados(tasks, 'tasks.json')
     return jsonify({"success": True})
 
@@ -177,6 +160,7 @@ def chamado_ti():
             time_by_priority[ticket.get('prioridade', 'N/A')].append(simulated_time)
     avg_time_geral = (total_resolution_time / concluded_count) if concluded_count > 0 else 0
     avg_time_by_priority = {p: sum(times)/len(times) for p, times in time_by_priority.items()}
+    time_priority_chart_colors = [PRIORITY_COLORS.get(p, PRIORITY_COLORS["N/A"]) for p in avg_time_by_priority.keys()]
 
     return render_template(
         'chamado_ti.html',
@@ -186,20 +170,15 @@ def chamado_ti():
         chart_monthly_data=[chamados_por_mes[m] for m in meses_ordenados],
         chart_creators_labels=list(criadores_counts.keys()), chart_creators_data=list(criadores_counts.values()),
         avg_time_geral=round(avg_time_geral, 2),
-        chart_time_priority_labels=list(avg_time_by_priority.keys()), chart_time_priority_data=[round(v, 2) for v in avg_time_by_priority.values()]
+        chart_time_priority_labels=list(avg_time_by_priority.keys()), chart_time_priority_data=[round(v, 2) for v in avg_time_by_priority.values()],
+        chart_time_priority_colors=time_priority_chart_colors
     )
 
 @app.route('/chamado_ti/novo', methods=['POST'])
 @login_obrigatorio()
 def novo_chamado():
     tickets = carregar_dados('tickets.json')
-    novo_ticket = {
-        "id": (tickets[-1]['id'] + 1) if tickets else 1,
-        "titulo": request.form['titulo'], "descricao": request.form['descricao'],
-        "prioridade": request.form['prioridade'],
-        "criado_por": session['username'], "data_criacao": datetime.datetime.now().strftime("%d/%m/%Y %H:%M"),
-        "status": "Aberto", "notas": []
-    }
+    novo_ticket = { "id": (tickets[-1]['id'] + 1) if tickets else 1, "titulo": request.form['titulo'], "descricao": request.form['descricao'], "prioridade": request.form['prioridade'], "criado_por": session['username'], "data_criacao": datetime.datetime.now().strftime("%d/%m/%Y %H:%M"), "status": "Aberto", "notas": [] }
     tickets.append(novo_ticket)
     guardar_dados(tickets, 'tickets.json')
     flash('Chamado aberto com sucesso!', 'success')
@@ -211,9 +190,7 @@ def mover_chamado():
     ticket_id, novo_status = int(request.form['ticket_id']), request.form['novo_status']
     tickets = carregar_dados('tickets.json')
     for ticket in tickets:
-        if ticket.get('id') == ticket_id:
-            ticket['status'] = novo_status
-            break
+        if ticket.get('id') == ticket_id: ticket['status'] = novo_status; break
     guardar_dados(tickets, 'tickets.json')
     return jsonify({"success": True})
 

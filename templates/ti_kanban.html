@@ -7,12 +7,7 @@
 {% block content %}
 <header class="main-header"><h1>Gestão de Tarefas de TI</h1></header>
 
-{% with messages = get_flashed_messages(with_categories=true ) %}
-  {% if messages %}{% for category, message in messages %}
-    <div class="alert alert-{{ category }}">{{ message }}</div>
-  {% endfor %}{% endif %}
-{% endwith %}
-
+<!-- Seções de indicadores, formulário e kanban (sem alterações ) -->
 <section class="indicators-grid">
     <div class="indicator-card"><h3>Total</h3><p class="indicator-value">{{ total_tasks }}</p></div>
     <div class="indicator-card"><h3>Backlog</h3><p class="indicator-value">{{ status_counts.get('Backlog', 0) }}</p></div>
@@ -20,56 +15,23 @@
     <div class="indicator-card"><h3>Doing</h3><p class="indicator-value">{{ status_counts.get('Doing', 0) }}</p></div>
     <div class="indicator-card"><h3>Concluded</h3><p class="indicator-value">{{ status_counts.get('Concluded', 0) }}</p></div>
 </section>
-
-<!-- FORMULÁRIO CORRIGIDO -->
 <div class="form-container">
     <h3>Criar Nova Tarefa</h3>
     <form action="{{ url_for('nova_tarefa_ti') }}" method="post" class="creation-form">
-        <div class="form-group">
-            <label for="titulo-tarefa">Título da Tarefa</label>
-            <input type="text" id="titulo-tarefa" name="titulo" placeholder="Título da Tarefa" required class="form-input">
-        </div>
-        <div class="form-group-inline">
-            <div class="form-subgroup"><label for="prioridade-tarefa">Prioridade</label><select id="prioridade-tarefa" name="prioridade" required class="form-select"><option value="" disabled selected>Selecione...</option><option value="Baixa">Baixa</option><option value="Média">Média</option><option value="Alta">Alta</option><option value="Crítica">Crítica</option></select></div>
-            <div class="form-subgroup"><label for="responsavel-tarefa">Responsável</label><input type="text" id="responsavel-tarefa" name="responsavel" placeholder="Nome do responsável" required class="form-input"></div>
-            <div class="form-subgroup"><label for="status-tarefa">Status Inicial</label><select id="status-tarefa" name="status" required class="form-select"><option value="" disabled selected>Selecione...</option><option value="Backlog">Backlog</option><option value="Analyze">Analyze</option><option value="Doing">Doing</option><option value="Concluded">Concluded</option></select></div>
-        </div>
-        <div class="form-group">
-            <label for="descricao-tarefa">Descrição da Tarefa</label>
-            <textarea id="descricao-tarefa" name="descricao" placeholder="Detalhes da tarefa..." required class="form-textarea" rows="3"></textarea>
-        </div>
+        <div class="form-group"><label for="titulo-tarefa">Título da Tarefa</label><input type="text" id="titulo-tarefa" name="titulo" placeholder="Título da Tarefa" required class="form-input"></div>
+        <div class="form-group-inline"><div class="form-subgroup"><label for="prioridade-tarefa">Prioridade</label><select id="prioridade-tarefa" name="prioridade" required class="form-select"><option value="" disabled selected>Selecione...</option><option value="Baixa">Baixa</option><option value="Média">Média</option><option value="Alta">Alta</option><option value="Crítica">Crítica</option></select></div><div class="form-subgroup"><label for="responsavel-tarefa">Responsável</label><input type="text" id="responsavel-tarefa" name="responsavel" placeholder="Nome do responsável" required class="form-input"></div><div class="form-subgroup"><label for="status-tarefa">Status Inicial</label><select id="status-tarefa" name="status" required class="form-select"><option value="" disabled selected>Selecione...</option><option value="Backlog">Backlog</option><option value="Analyze">Analyze</option><option value="Doing">Doing</option><option value="Concluded">Concluded</option></select></div></div>
+        <div class="form-group"><label for="descricao-tarefa">Descrição da Tarefa</label><textarea id="descricao-tarefa" name="descricao" placeholder="Detalhes da tarefa..." required class="form-textarea" rows="3"></textarea></div>
         <div class="form-actions"><button type="submit" class="btn-submit-ti">CRIAR TAREFA</button></div>
     </form>
 </div>
-
 <div class="kanban-board">
-    {% for status, tasks in board.items() %}
-    <div class="kanban-column">
-        <h3 class="column-title">{{ status }} ({{ tasks|length }})</h3>
-        <div class="tasks-container" data-status="{{ status }}">
-            {% for task in tasks %}
-            <div class="task-card" data-task-id="{{ task.id }}">
-                <div class="task-header">
-                    <h4>#{{ task.id }} - {{ task.titulo }}</h4>
-                    <span class="priority-badge priority-{{ task.prioridade.lower() }}">{{ task.prioridade }}</span>
-                </div>
-                <p class="task-desc">{{ task.descricao }}</p>
-                <div class="task-footer">
-                    <span class="task-responsible"><strong>Resp:</strong> {{ task.responsavel }}</span>
-                    <span class="task-date">{{ task.data_criacao }}</span>
-                </div>
-            </div>
-            {% else %}<p class="no-tasks">Nenhuma tarefa.</p>{% endfor %}
-        </div>
-    </div>
-    {% endfor %}
+    {% for status, tasks in board.items() %}<div class="kanban-column"><h3 class="column-title">{{ status }} ({{ tasks|length }})</h3><div class="tasks-container" data-status="{{ status }}">{% for task in tasks %}<div class="task-card" data-task-id="{{ task.id }}"><div class="task-header"><h4>#{{ task.id }} - {{ task.titulo }}</h4><span class="priority-badge priority-{{ task.prioridade.lower() }}">{{ task.prioridade }}</span></div><p class="task-desc">{{ task.descricao }}</p><div class="task-footer"><span class="task-responsible"><strong>Resp:</strong> {{ task.responsavel }}</span><span class="task-date">{{ task.data_criacao }}</span></div></div>{% else %}<p class="no-tasks">Nenhuma tarefa.</p>{% endfor %}</div></div>{% endfor %}
 </div>
 
-<!-- GRÁFICOS ATUALIZADOS -->
+<!-- Seção de Gráficos com as cores corrigidas -->
 <section class="charts-grid" style="margin-top: 30px;">
     <div class="chart-card"><h3>Tarefas por Status</h3><div class="chart-container"><canvas id="statusChart"></canvas></div></div>
     <div class="chart-card"><h3>Tarefas por Responsável</h3><div class="chart-container"><canvas id="responsibleChart"></canvas></div></div>
-    <!-- NOVO: Gráfico de Tempo por Prioridade -->
     <div class="chart-card"><h3>Tempo de Resolução por Prioridade (h)</h3><div class="chart-container"><canvas id="timePriorityChart"></canvas></div></div>
 </section>
 <section class="charts-grid" style="margin-top: 1.5rem;">
@@ -86,17 +48,21 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(r => r.json()).then(d => d.success && window.location.reload());
     }}));
 
-    const highlightColor = '#fd7e14';
-    const colorPalette = ['#1e3a5f', '#f9a826', '#28a745', '#8892b0', '#ffc107'];
+    // --- AJUSTE DE CORES DOS GRÁFICOS ---
+    const softOrange = '#f9a826';
+    const lightRed = '#e57373'; // Vermelho claro para o gráfico de tempo
+    const fullPalette = ['#1e3a5f', softOrange, '#28a745', '#8892b0', '#ffc107'];
+    const noDarkBluePalette = [softOrange, '#ffc107', '#28a745', '#8892b0'];
     const chartOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } };
 
-    new Chart(document.getElementById('statusChart'), { type: 'pie', data: { labels: {{ chart_status_labels|tojson }}, datasets: [{ data: {{ chart_status_data|tojson }}, backgroundColor: colorPalette }] }, options: chartOptions });
-    // CORREÇÃO: Gráfico de responsáveis com laranja
-    new Chart(document.getElementById('responsibleChart'), { type: 'doughnut', data: { labels: {{ chart_responsible_labels|tojson }}, datasets: [{ data: {{ chart_responsible_data|tojson }}, backgroundColor: [highlightColor, ...colorPalette.slice(1)] }] }, options: chartOptions });
-    // CORREÇÃO: Gráfico de prioridade com laranja
-    new Chart(document.getElementById('priorityChart'), { type: 'bar', data: { labels: {{ chart_priority_labels|tojson }}, datasets: [{ label: 'Nº de Tarefas', data: {{ chart_priority_data|tojson }}, backgroundColor: highlightColor }] }, options: chartOptions });
-    // NOVO: Renderização do gráfico de tempo por prioridade
-    new Chart(document.getElementById('timePriorityChart'), { type: 'bar', data: { labels: {{ chart_time_priority_labels|tojson }}, datasets: [{ label: 'Horas', data: {{ chart_time_priority_data|tojson }}, backgroundColor: colorPalette }] }, options: chartOptions });
+    new Chart(document.getElementById('statusChart'), { type: 'pie', data: { labels: {{ chart_status_labels|tojson }}, datasets: [{ data: {{ chart_status_data|tojson }}, backgroundColor: fullPalette }] }, options: chartOptions });
+    new Chart(document.getElementById('responsibleChart'), { type: 'doughnut', data: { labels: {{ chart_responsible_labels|tojson }}, datasets: [{ data: {{ chart_responsible_data|tojson }}, backgroundColor: noDarkBluePalette }] }, options: chartOptions });
+    
+    // Gráfico "Tempo de Resolução por Prioridade" com vermelho claro
+    new Chart(document.getElementById('timePriorityChart'), { type: 'bar', data: { labels: {{ chart_time_priority_labels|tojson }}, datasets: [{ label: 'Horas', data: {{ chart_time_priority_data|tojson }}, backgroundColor: lightRed }] }, options: chartOptions });
+
+    // Gráfico "Tarefas por Prioridade" com cores dinâmicas baseadas nas badges
+    new Chart(document.getElementById('priorityChart'), { type: 'bar', data: { labels: {{ chart_priority_labels|tojson }}, datasets: [{ label: 'Nº de Tarefas', data: {{ chart_priority_data|tojson }}, backgroundColor: {{ chart_priority_colors|tojson }} }] }, options: chartOptions });
 });
 </script>
 {% endblock %}

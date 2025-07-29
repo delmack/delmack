@@ -7,85 +7,33 @@
 {% block content %}
 <header class="main-header"><h1>Central de Suporte de TI</h1></header>
 
-{% with messages = get_flashed_messages(with_categories=true ) %}
-  {% if messages %}{% for category, message in messages %}
-    <div class="alert alert-{{ category }}">{{ message }}</div>
-  {% endfor %}{% endif %}
-{% endwith %}
-
+<!-- Seções de indicadores, formulário e kanban (sem alterações ) -->
 <section class="indicators-grid">
     <div class="indicator-card"><h3>Total de Chamados</h3><p class="indicator-value">{{ total_tickets }}</p></div>
     <div class="indicator-card"><h3>Abertos</h3><p class="indicator-value">{{ status_counts.get('Aberto', 0) }}</p></div>
     <div class="indicator-card"><h3>Em Andamento</h3><p class="indicator-value">{{ status_counts.get('Em Andamento', 0) }}</p></div>
     <div class="indicator-card"><h3>Concluídos</h3><p class="indicator-value">{{ status_counts.get('Concluído', 0) }}</p></div>
 </section>
-
-<!-- FORMULÁRIO CORRIGIDO E COM PRIORIDADE -->
 <div class="form-container">
     <h3>Criar Novo Chamado</h3>
     <form action="{{ url_for('novo_chamado') }}" method="post" class="creation-form">
-        <div class="form-group-inline">
-            <div class="form-subgroup" style="flex-grow: 3;">
-                <label for="titulo-chamado">Título do Chamado</label>
-                <input type="text" id="titulo-chamado" name="titulo" placeholder="Ex: Impressora não funciona" required class="form-input">
-            </div>
-            <div class="form-subgroup" style="flex-grow: 1;">
-                <label for="prioridade-chamado">Prioridade</label>
-                <select id="prioridade-chamado" name="prioridade" required class="form-select">
-                    <option value="Baixa" selected>Baixa</option>
-                    <option value="Média">Média</option>
-                    <option value="Alta">Alta</option>
-                </select>
-            </div>
-        </div>
-        <div class="form-group">
-            <label for="descricao-chamado">Descrição Detalhada do Problema</label>
-            <textarea id="descricao-chamado" name="descricao" placeholder="Descreva o que aconteceu, mensagens de erro, etc." required class="form-textarea" rows="3"></textarea>
-        </div>
+        <div class="form-group-inline"><div class="form-subgroup" style="flex-grow: 3;"><label for="titulo-chamado">Título do Chamado</label><input type="text" id="titulo-chamado" name="titulo" placeholder="Ex: Impressora não funciona" required class="form-input"></div><div class="form-subgroup" style="flex-grow: 1;"><label for="prioridade-chamado">Prioridade</label><select id="prioridade-chamado" name="prioridade" required class="form-select"><option value="Baixa" selected>Baixa</option><option value="Média">Média</option><option value="Alta">Alta</option></select></div></div>
+        <div class="form-group"><label for="descricao-chamado">Descrição Detalhada do Problema</label><textarea id="descricao-chamado" name="descricao" placeholder="Descreva o que aconteceu, mensagens de erro, etc." required class="form-textarea" rows="3"></textarea></div>
         <div class="form-actions"><button type="submit" class="btn-submit-ti">ABRIR CHAMADO</button></div>
     </form>
 </div>
-
 <div class="kanban-board">
-    {% for status, tickets in board.items() %}
-    <div class="kanban-column">
-        <h3 class="column-title">{{ status }} ({{ tickets|length }})</h3>
-        <div class="tickets-container" data-status="{{ status }}">
-            {% for ticket in tickets %}
-            <div class="task-card" data-ticket-id="{{ ticket.id }}">
-                <div class="task-header">
-                    <h4>#{{ ticket.id }} - {{ ticket.titulo }}</h4>
-                    <!-- NOVO: Badge de Prioridade -->
-                    <span class="priority-badge priority-{{ (ticket.prioridade or 'baixa').lower() }}">{{ ticket.prioridade or 'Baixa' }}</span>
-                </div>
-                <p class="task-desc">{{ ticket.descricao }}</p>
-                <div class="task-footer">
-                    <span class="task-responsible"><strong>Por:</strong> {{ ticket.criado_por }}</span>
-                    <span class="task-date">{{ ticket.data_criacao }}</span>
-                </div>
-            </div>
-            {% else %}<p class="no-tasks">Nenhum chamado.</p>{% endfor %}
-        </div>
-    </div>
-    {% endfor %}
+    {% for status, tickets in board.items() %}<div class="kanban-column"><h3 class="column-title">{{ status }} ({{ tickets|length }})</h3><div class="tickets-container" data-status="{{ status }}">{% for ticket in tickets %}<div class="task-card" data-ticket-id="{{ ticket.id }}"><div class="task-header"><h4>#{{ ticket.id }} - {{ ticket.titulo }}</h4><span class="priority-badge priority-{{ (ticket.prioridade or 'baixa').lower() }}">{{ ticket.prioridade or 'Baixa' }}</span></div><p class="task-desc">{{ ticket.descricao }}</p><div class="task-footer"><span class="task-responsible"><strong>Por:</strong> {{ ticket.criado_por }}</span><span class="task-date">{{ ticket.data_criacao }}</span></div></div>{% else %}<p class="no-tasks">Nenhum chamado.</p>{% endfor %}</div></div>{% endfor %}
 </div>
 
-<!-- GRÁFICOS ATUALIZADOS -->
+<!-- Seção de Gráficos com as cores corrigidas -->
 <section class="charts-grid" style="margin-top: 30px;">
     <div class="chart-card"><h3>Status dos Chamados</h3><div class="chart-container"><canvas id="statusChart"></canvas></div></div>
     <div class="chart-card"><h3>Maiores Solicitantes</h3><div class="chart-container"><canvas id="creatorsChart"></canvas></div></div>
-    <!-- NOVO: Gráfico de Tempo Médio Geral -->
-    <div class="chart-card">
-        <h3>Tempo Médio de Resolução</h3>
-        <div class="kpi-card-large">
-            <p class="kpi-value">{{ avg_time_geral }}</p>
-            <p class="kpi-label">Horas (Média)</p>
-        </div>
-    </div>
+    <div class="chart-card"><h3>Tempo Médio de Resolução</h3><div class="kpi-card-large"><p class="kpi-value">{{ avg_time_geral }}</p><p class="kpi-label">Horas (Média)</p></div></div>
 </section>
 <section class="charts-grid" style="margin-top: 1.5rem;">
     <div class="chart-card chart-full-width"><h3>Volume Mensal de Chamados</h3><div class="chart-container" style="height: 300px;"><canvas id="monthlyChart"></canvas></div></div>
-    <!-- NOVO: Gráfico de Tempo por Prioridade -->
     <div class="chart-card chart-full-width"><h3>Tempo de Resolução por Prioridade (h)</h3><div class="chart-container" style="height: 300px;"><canvas id="timePriorityChart"></canvas></div></div>
 </section>
 {% endblock %}
@@ -101,16 +49,18 @@ document.addEventListener('DOMContentLoaded', function() {
         }}));
     }
 
-    const highlightColor = '#fd7e14';
-    const colorPalette = ['#1e3a5f', '#f9a826', '#28a745', '#8892b0', '#ffc107'];
+    // --- AJUSTE DE CORES DOS GRÁFICOS ---
+    const softOrange = '#f9a826';
+    const fullPalette = ['#1e3a5f', softOrange, '#28a745', '#8892b0', '#ffc107'];
+    const noDarkBluePalette = [softOrange, '#ffc107', '#28a745', '#8892b0'];
     const chartOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } };
 
-    new Chart(document.getElementById('statusChart'), { type: 'pie', data: { labels: {{ chart_status_labels|tojson }}, datasets: [{ data: {{ chart_status_data|tojson }}, backgroundColor: colorPalette }] }, options: chartOptions });
-    new Chart(document.getElementById('creatorsChart'), { type: 'doughnut', data: { labels: {{ chart_creators_labels|tojson }}, datasets: [{ data: {{ chart_creators_data|tojson }}, backgroundColor: colorPalette }] }, options: chartOptions });
-    new Chart(document.getElementById('monthlyChart'), { type: 'bar', data: { labels: {{ chart_monthly_labels|tojson }}, datasets: [{ label: 'Nº de Chamados', data: {{ chart_monthly_data|tojson }}, backgroundColor: highlightColor }] }, options: chartOptions });
+    new Chart(document.getElementById('statusChart'), { type: 'pie', data: { labels: {{ chart_status_labels|tojson }}, datasets: [{ data: {{ chart_status_data|tojson }}, backgroundColor: fullPalette }] }, options: chartOptions });
+    new Chart(document.getElementById('creatorsChart'), { type: 'doughnut', data: { labels: {{ chart_creators_labels|tojson }}, datasets: [{ data: {{ chart_creators_data|tojson }}, backgroundColor: noDarkBluePalette }] }, options: chartOptions });
+    new Chart(document.getElementById('monthlyChart'), { type: 'bar', data: { labels: {{ chart_monthly_labels|tojson }}, datasets: [{ label: 'Nº de Chamados', data: {{ chart_monthly_data|tojson }}, backgroundColor: softOrange }] }, options: chartOptions });
     
-    // NOVO: Renderização do gráfico de tempo por prioridade
-    new Chart(document.getElementById('timePriorityChart'), { type: 'bar', data: { labels: {{ chart_time_priority_labels|tojson }}, datasets: [{ label: 'Horas', data: {{ chart_time_priority_data|tojson }}, backgroundColor: colorPalette }] }, options: chartOptions });
+    // Gráfico "Tempo de Resolução por Prioridade" com cores dinâmicas baseadas nas badges
+    new Chart(document.getElementById('timePriorityChart'), { type: 'bar', data: { labels: {{ chart_time_priority_labels|tojson }}, datasets: [{ label: 'Horas', data: {{ chart_time_priority_data|tojson }}, backgroundColor: {{ chart_time_priority_colors|tojson }} }] }, options: chartOptions });
 });
 </script>
 {% endblock %}
