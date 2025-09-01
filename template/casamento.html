@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Victor & Angellica - Nosso Casamento</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -40,7 +40,7 @@
             <div class="couple-container">
                 <div class="bride">
                     <div class="photo-frame">
-                        <img src="images/Foto1.jpg" alt="Angellica Passos Delle">
+                        <img src="{{ url_for('static', filename='images/Foto1.jpg') }}" alt="Angellica Passos Delle">
                         <div class="frame-decoration"></div>
                     </div>
                     <h3>Angellica Passos Delle</h3>
@@ -51,7 +51,7 @@
                 </div>
                 <div class="groom">
                     <div class="photo-frame">
-                        <img src="images/Foto2.jpg" alt="Victor Macioski">
+                        <img src="{{ url_for('static', filename='images/Foto2.jpg') }}" alt="Victor Macioski">
                         <div class="frame-decoration"></div>
                     </div>
                     <h3>Victor Macioski</h3>
@@ -202,6 +202,6 @@
         <i class="fab fa-whatsapp"></i>
     </a>
 
-    <script src="js/script.js"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
 </html>
