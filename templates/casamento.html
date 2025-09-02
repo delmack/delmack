@@ -7,7 +7,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         
         body {
             font-family: 'Montserrat', sans-serif;
@@ -15,10 +19,28 @@
             color: #5a3e36;
             line-height: 1.6;
             overflow-x: hidden;
+            position: relative;
         }
-
-        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
-
+        
+        /* Flores de fundo */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M30,20 Q40,5 50,20 T70,20" fill="none" stroke="%23f8e0e950" stroke-width="0.5"/><circle cx="20" cy="30" r="3" fill="%23f8e0e930"/><circle cx="80" cy="40" r="2" fill="%23f8e0e930"/><circle cx="60" cy="10" r="4" fill="%23f8e0e930"/><circle cx="10" cy="70" r="3" fill="%23f8e0e930"/><circle cx="90" cy="80" r="2" fill="%23f8e0e930"/></svg>');
+            z-index: -1;
+            pointer-events: none;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
         /* Hero Section */
         .hero {
             position: relative;
@@ -27,24 +49,39 @@
             justify-content: center;
             align-items: center;
             text-align: center;
-            background: linear-gradient(rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.7));
+            background: linear-gradient(rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.7)), url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M30,20 Q40,5 50,20 T70,20" fill="none" stroke="%23c46bae" stroke-width="0.5"/><circle cx="20" cy="30" r="3" fill="%23c46bae"/><circle cx="80" cy="40" r="2" fill="%23c46bae"/><circle cx="60" cy="10" r="4" fill="%23c46bae"/></svg>');
+            background-size: 300px;
             overflow: hidden;
         }
-
-        .hero-content { position: relative; z-index: 2; max-width: 800px; padding: 20px; }
-
+        
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 800px;
+            padding: 20px;
+        }
+        
         .hero h1 {
             font-family: 'Cormorant Garamond', serif;
             font-size: 4rem;
             margin-bottom: 20px;
             color: #c46bae;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
         }
-
-        .subtitle { font-size: 1.8rem; margin-bottom: 30px; color: #7a3b6a; }
-
-        .quote { font-style: italic; font-size: 1.2rem; margin-bottom: 40px; color: #5a3e36; }
-
-        /* Flores decorativas */
+        
+        .subtitle {
+            font-size: 1.8rem;
+            margin-bottom: 30px;
+            color: #7a3b6a;
+        }
+        
+        .quote {
+            font-style: italic;
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+            color: #5a3e36;
+        }
+        
         .floral-decoration {
             position: absolute;
             width: 200px;
@@ -54,48 +91,320 @@
             opacity: 0.7;
             z-index: 1;
         }
-
-        .top-left { top: 0; left: 0; background-image: url('https://cdn-icons-png.flaticon.com/512/616/616408.png'); }
-        .top-right { top: 0; right: 0; background-image: url('https://cdn-icons-png.flaticon.com/512/616/616408.png'); transform: scaleX(-1); }
-        .bottom-left { bottom: 0; left: 0; background-image: url('https://cdn-icons-png.flaticon.com/512/616/616408.png'); transform: scaleY(-1); }
-        .bottom-right { bottom: 0; right: 0; background-image: url('https://cdn-icons-png.flaticon.com/512/616/616408.png'); transform: scale(-1); }
-
-        /* Decorações adicionais */
-        .extra-floral {
-            position: absolute;
-            width: 120px;
-            height: 120px;
-            background-size: contain;
-            background-repeat: no-repeat;
-            opacity: 0.6;
-            z-index: 0;
+        
+        .top-left {
+            top: 0;
+            left: 0;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M30,20 Q40,5 50,20 T70,20" fill="none" stroke="%23c46bae" stroke-width="1"/><circle cx="20" cy="30" r="8" fill="%23f8e0e9"/><circle cx="40" cy="15" r="5" fill="%23f8e0e9"/><circle cx="60" cy="25" r="7" fill="%23f8e0e9"/></svg>');
         }
-        .extra-top { top: 10%; left: 50%; transform: translateX(-50%); background-image: url('https://cdn-icons-png.flaticon.com/512/765/765043.png'); }
-        .extra-bottom { bottom: 5%; left: 50%; transform: translateX(-50%); background-image: url('https://cdn-icons-png.flaticon.com/512/765/765043.png'); }
-
+        
+        .top-right {
+            top: 0;
+            right: 0;
+            transform: scaleX(-1);
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M30,20 Q40,5 50,20 T70,20" fill="none" stroke="%23c46bae" stroke-width="1"/><circle cx="20" cy="30" r="8" fill="%23f8e0e9"/><circle cx="40" cy="15" r="5" fill="%23f8e0e9"/><circle cx="60" cy="25" r="7" fill="%23f8e0e9"/></svg>');
+        }
+        
+        .bottom-left {
+            bottom: 0;
+            left: 0;
+            transform: scaleY(-1);
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M30,20 Q40,5 50,20 T70,20" fill="none" stroke="%23c46bae" stroke-width="1"/><circle cx="20" cy="30" r="8" fill="%23f8e0e9"/><circle cx="40" cy="15" r="5" fill="%23f8e0e9"/><circle cx="60" cy="25" r="7" fill="%23f8e0e9"/></svg>');
+        }
+        
+        .bottom-right {
+            bottom: 0;
+            right: 0;
+            transform: scale(-1);
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M30,20 Q40,5 50,20 T70,20" fill="none" stroke="%23c46bae" stroke-width="1"/><circle cx="20" cy="30" r="8" fill="%23f8e0e9"/><circle cx="40" cy="15" r="5" fill="%23f8e0e9"/><circle cx="60" cy="25" r="7" fill="%23f8e0e9"/></svg>');
+        }
+        
         /* Couple Section */
-        .couple-section { padding: 80px 0; position: relative; }
-        .section-title { text-align: center; font-family: 'Cormorant Garamond', serif; font-size: 2.8rem; margin-bottom: 50px; color: #c46bae; }
-
-        /* Location Section - Mapa Ampliado */
-        .location-section { padding: 80px 0; background: linear-gradient(135deg, #fffaf0 0%, #ffefd6 100%); }
-        .location-container { display: flex; flex-direction: column; align-items: center; }
-        .location-info { text-align: center; max-width: 600px; margin-bottom: 40px; }
-        .location-info h3 { font-family: 'Cormorant Garamond', serif; font-size: 2rem; margin-bottom: 20px; color: #7a3b6a; }
-        .location-info i { color: #c46bae; margin-right: 10px; }
-
-        /* Mapa maior */
-        .map-container { width: 100%; max-width: 1100px; margin: 30px auto; border-radius: 15px; overflow: hidden; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15); border: 5px solid white; }
-        .map-container iframe { width: 100%; height: 650px; display: block; }
-
+        .couple-section {
+            padding: 80px 0;
+            position: relative;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="5" fill="%23f8e0e940"/><circle cx="80" cy="30" r="3" fill="%23f8e0e940"/><circle cx="40" cy="70" r="4" fill="%23f8e0e940"/><circle cx="70" cy="80" r="6" fill="%23f8e0e940"/></svg>');
+            background-size: 300px;
+        }
+        
+        .section-title {
+            text-align: center;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.8rem;
+            margin-bottom: 50px;
+            color: #c46bae;
+            position: relative;
+        }
+        
+        .section-title::after {
+            content: "";
+            display: block;
+            width: 100px;
+            height: 3px;
+            background: linear-gradient(to right, transparent, #c46bae, transparent);
+            margin: 15px auto;
+        }
+        
+        .couple-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 40px;
+        }
+        
+        .bride, .groom {
+            text-align: center;
+            max-width: 300px;
+        }
+        
+        .photo-frame {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 20px;
+            border-radius: 50%;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            border: 5px solid white;
+        }
+        
+        .photo-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .frame-decoration {
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            border: 2px solid #f8e0e9;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        
+        .heart-connector {
+            font-size: 2.5rem;
+            color: #c46bae;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .floral-divider {
+            height: 100px;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 20"><path d="M0,10 C30,0 70,0 100,10 L100,20 L0,20 Z" fill="%23f8e0e9"/><circle cx="20" cy="5" r="3" fill="%23c46bae"/><circle cx="50" cy="8" r="2" fill="%23c46bae"/><circle cx="80" cy="5" r="3" fill="%23c46bae"/></svg>');
+            background-size: 100% 100%;
+            margin: 40px 0;
+        }
+        
+        /* Location Section */
+        .location-section {
+            padding: 80px 0;
+            background: linear-gradient(135deg, #fffaf0 0%, #ffefd6 100%);
+        }
+        
+        .location-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .location-info {
+            text-align: center;
+            max-width: 600px;
+            margin-bottom: 40px;
+        }
+        
+        .location-info h3 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: #7a3b6a;
+        }
+        
+        .location-info p {
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+        
+        .location-info i {
+            color: #c46bae;
+            width: 20px;
+            margin-right: 10px;
+        }
+        
+        /* Mapa Ampliado */
+        .map-container {
+            width: 100%;
+            max-width: 900px;
+            margin: 30px auto;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+            border: 5px solid white;
+        }
+        
+        .map-container iframe {
+            width: 100%;
+            height: 500px;
+            display: block;
+        }
+        
+        /* Dress Code Section */
+        .dresscode-section {
+            padding: 80px 0;
+            position: relative;
+            overflow: hidden;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="10" cy="10" r="4" fill="%23f8e0e940"/><circle cx="90" cy="20" r="3" fill="%23f8e0e940"/><circle cx="30" cy="80" r="5" fill="%23f8e0e940"/><circle cx="70" cy="90" r="2" fill="%23f8e0e940"/></svg>');
+            background-size: 300px;
+        }
+        
+        .floral-side {
+            position: absolute;
+            width: 200px;
+            height: 100%;
+            top: 0;
+            z-index: 0;
+            opacity: 0.5;
+        }
+        
+        .floral-left {
+            left: 0;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 500"><path d="M30,50 Q0,30 20,100 T50,200 T30,350 T60,450 T40,500" fill="none" stroke="%23c46bae" stroke-width="2"/><path d="M50,80 Q20,60 40,130 T70,230 T50,380 T80,480 T60,530" fill="none" stroke="%23c46bae" stroke-width="2"/><circle cx="40" cy="60" r="8" fill="%23f8e0e9"/><circle cx="60" cy="150" r="6" fill="%23f8e0e9"/><circle cx="30" cy="250" r="7" fill="%23f8e0e9"/><circle cx="50" cy="350" r="5" fill="%23f8e0e9"/><circle cx="20" cy="450" r="9" fill="%23f8e0e9"/></svg>');
+            background-repeat: no-repeat;
+        }
+        
+        .floral-right {
+            right: 0;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 500"><path d="M70,50 Q100,30 80,100 T50,200 T70,350 T40,450 T60,500" fill="none" stroke="%23c46bae" stroke-width="2"/><path d="M50,80 Q80,60 60,130 T30,230 T50,380 T20,480 T40,530" fill="none" stroke="%23c46bae" stroke-width="2"/><circle cx="60" cy="60" r="8" fill="%23f8e0e9"/><circle cx="40" cy="150" r="6" fill="%23f8e0e9"/><circle cx="70" cy="250" r="7" fill="%23f8e0e9"/><circle cx="50" cy="350" r="5" fill="%23f8e0e9"/><circle cx="80" cy="450" r="9" fill="%23f8e0e9"/></svg>');
+            background-repeat: no-repeat;
+        }
+        
+        .dresscode-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .dresscode-icon {
+            font-size: 3rem;
+            color: #c46bae;
+            margin-bottom: 20px;
+        }
+        
+        .dresscode-info {
+            text-align: center;
+        }
+        
+        .dresscode-info h3 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            color: #7a3b6a;
+        }
+        
+        .dresscode-info p {
+            margin-bottom: 10px;
+        }
+        
         /* Footer */
-        footer { background: linear-gradient(135deg, #7a3b6a 0%, #5a3e36 100%); color: white; padding: 40px 0; text-align: center; }
-
+        footer {
+            background: linear-gradient(135deg, #7a3b6a 0%, #5a3e36 100%);
+            color: white;
+            padding: 40px 0;
+            text-align: center;
+        }
+        
+        .footer-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .footer-text h3 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        .whatsapp-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 25px;
+            background-color: #25D366;
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
+        }
+        
+        .whatsapp-btn:hover {
+            background-color: #128C7E;
+        }
+        
+        /* Floating WhatsApp Button */
+        .float-whatsapp {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background-color: #25D366;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            z-index: 999;
+            transition: background-color 0.3s ease;
+        }
+        
+        .float-whatsapp:hover {
+            background-color: #128C7E;
+        }
+        
         /* Responsividade */
         @media (max-width: 768px) {
-            .hero h1 { font-size: 2.5rem; }
-            .subtitle { font-size: 1.4rem; }
-            .map-container iframe { height: 500px; }
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .subtitle {
+                font-size: 1.4rem;
+            }
+            
+            .couple-container {
+                flex-direction: column;
+            }
+            
+            .floral-side {
+                width: 100px;
+                opacity: 0.3;
+            }
+            
+            .map-container iframe {
+                height: 350px;
+            }
         }
     </style>
 </head>
@@ -103,16 +412,44 @@
     <!-- Hero Section -->
     <section class="hero" id="home">
         <div class="hero-content">
-            <h1>Victor & Angellica</h1>
-            <p class="subtitle">08 • 08 • 2026</p>
-            <p class="quote">"O amor nos trouxe até aqui. Um dia especial para selar nossa história e contar com a sua presença."</p>
+            <h1 class="animate-text">Victor & Angellica</h1>
+            <!-- Data alterada para 08/08/2026 -->
+            <p class="subtitle animate-text">08 • 08 • 2026</p>
+            <p class="quote animate-text">"O amor nos trouxe até aqui. Um dia especial para selar nossa história e contar com a sua presença."</p>
         </div>
         <div class="floral-decoration top-left"></div>
         <div class="floral-decoration top-right"></div>
         <div class="floral-decoration bottom-left"></div>
         <div class="floral-decoration bottom-right"></div>
-        <div class="extra-floral extra-top"></div>
-        <div class="extra-floral extra-bottom"></div>
+    </section>
+
+    <!-- Couple Section -->
+    <section class="couple-section" id="noivos">
+        <div class="container">
+            <h2 class="section-title">Os Noivos</h2>
+            <div class="couple-container">
+                <div class="bride">
+                    <div class="photo-frame">
+                        <div style="width:100%;height:100%;background-color:#f8e0e9;display:flex;justify-content:center;align-items:center;font-size:3rem;">👰</div>
+                        <div class="frame-decoration"></div>
+                    </div>
+                    <h3>Angellica Passos Delle</h3>
+                    <p>Minha doce noiva, com seu sorriso que ilumina meus dias e seu coração que transborda amor. Cada momento ao seu lado é uma bênção.</p>
+                </div>
+                <div class="heart-connector">
+                    <i class="fas fa-heart"></i>
+                </div>
+                <div class="groom">
+                    <div class="photo-frame">
+                        <div style="width:100%;height:100%;background-color:#f8e0e9;display:flex;justify-content:center;align-items:center;font-size:3rem;">🤵</div>
+                        <div class="frame-decoration"></div>
+                    </div>
+                    <h3>Victor Macioski</h3>
+                    <p>Meu amor, meu porto seguro. Com você aprendi o verdadeiro significado do amor incondicional. Mal posso esperar para viver eternamente ao seu lado.</p>
+                </div>
+            </div>
+        </div>
+        <div class="floral-divider"></div>
     </section>
 
     <!-- Location Section -->
@@ -122,22 +459,59 @@
             <div class="location-container">
                 <div class="location-info">
                     <h3>Nossa Celebração</h3>
+                    <!-- Data alterada para 08/08/2026 -->
                     <p><i class="fas fa-calendar-alt"></i> 08 de Agosto de 2026 às 16h</p>
                     <p><i class="fas fa-map-marker-alt"></i> R. Aleixo Nodari, nº - Imbuial, Colombo - PR, 83415-250</p>
                 </div>
+                <!-- Mapa Ampliado -->
                 <div class="map-container">
-                    <iframe src="https://www.google.com/maps/embed?pb=!1m18!..." width="100%" height="650" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+                    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3601.588399924028!2d-49.22462392433548!3d-25.48120163331425!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94dce5df5c904b13%3A0x7cb5c14d8e166e48!2sR.%20Aleixo%20Nodari%20-%20Imbuial%2C%20Colombo%20-%20PR%2C%2083415-250!5e0!3m2!1spt-BR!2sbr!4v1719500000000!5m2!1spt-BR!2sbr" width="100%" height="500" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
                 </div>
             </div>
         </div>
     </section>
 
+    <!-- Dress Code Section com flores laterais -->
+    <section class="dresscode-section">
+        <div class="floral-side floral-left"></div>
+        <div class="floral-side floral-right"></div>
+        <div class="container">
+            <h2 class="section-title">Vestimenta</h2>
+            <div class="dresscode-content">
+                <div class="dresscode-icon">
+                    <i class="fas fa-tshirt"></i>
+                </div>
+                <div class="dresscode-info">
+                    <h3>Social</h3>
+                    <p>Para tornar nosso dia ainda mais especial, convidamos todos a se vestirem de forma elegante e sofisticada.</p>
+                    <p><strong>Traje social completo.</strong></p>
+                </div>
+            </div>
+        </div>
+        <div class="floral-divider"></div>
+    </section>
+
     <!-- Footer -->
     <footer>
         <div class="container">
-            <h3>Victor & Angellica</h3>
-            <p>08 de Agosto de 2026</p>
+            <div class="footer-content">
+                <div class="footer-text">
+                    <h3>Victor & Angellica</h3>
+                    <!-- Data alterada para 08/08/2026 -->
+                    <p>08 de Agosto de 2026</p>
+                </div>
+                <div class="social-links">
+                    <a href="https://wa.me/5541999445586?text=Olá! Gostaria de mais informações sobre o casamento." class="whatsapp-btn" target="_blank">
+                        <i class="fab fa-whatsapp"></i> Entrar em contato
+                    </a>
+                </div>
+            </div>
         </div>
     </footer>
+
+    <!-- Floating WhatsApp Button -->
+    <a href="https://wa.me/5541999445586?text=Olá! Gostaria de mais informações sobre o casamento." class="float-whatsapp" target="_blank">
+        <i class="fab fa-whatsapp"></i>
+    </a>
 </body>
 </html>
