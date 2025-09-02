@@ -4,275 +4,145 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Victor & Angellica - Nosso Casamento</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Montserrat', sans-serif;
-            background-color: #fffaf0;
-            color: #5a3e36;
-            line-height: 1.6;
-            overflow-x: hidden;
-            position: relative;
-        }
-        
-        /* Flores de fundo */
-        body::before {
-            content: "";
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M30,20 Q40,5 50,20 T70,20" fill="none" stroke="%23f8e0e950" stroke-width="0.5"/><circle cx="20" cy="30" r="3" fill="%23f8e0e930"/><circle cx="80" cy="40" r="2" fill="%23f8e0e930"/><circle cx="60" cy="10" r="4" fill="%23f8e0e930"/><circle cx="10" cy="70" r="3" fill="%23f8e0e930"/><circle cx="90" cy="80" r="2" fill="%23f8e0e930"/></svg>');
-            z-index: -1;
-            pointer-events: none;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-        
-        /* Hero Section */
-        .hero {
-            position: relative;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            background: linear-gradient(rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.7)), url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M30,20 Q40,5 50,20 T70,20" fill="none" stroke="%23c46bae" stroke-width="0.5"/><circle cx="20" cy="30" r="3" fill="%23c46bae"/><circle cx="80" cy="40" r="2" fill="%23c46bae"/><circle cx="60" cy="10" r="4" fill="%23c46bae"/></svg>');
-            background-size: 300px;
-            overflow: hidden;
-        }
-        
-        .hero-content {
-            position: relative;
-            z-index: 2;
-            max-width: 800px;
-            padding: 20px;
-        }
-        
-        .hero h1 {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 4rem;
-            margin-bottom: 20px;
-            color: #c46bae;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        
-        .subtitle {
-            font-size: 1.8rem;
-            margin-bottom: 30px;
-            color: #7a3b6a;
-        }
-        
-        .quote {
-            font-style: italic;
-            font-size: 1.2rem;
-            margin-bottom: 40px;
-            color: #5a3e36;
-        }
-        
-        .floral-decoration {
-            position: absolute;
-            width: 200px;
-            height: 200px;
-            background-size: contain;
-            background-repeat: no-repeat;
-            opacity: 0.7;
-            z-index: 1;
-        }
-        
-        .top-left {
-            top: 0;
-            left: 0;
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M30,20 Q40,5 50,20 T70,20" fill="none" stroke="%23c46bae" stroke-width="1"/><circle cx="20" cy="30" r="8" fill="%23f8e0e9"/><circle cx="40" cy="15" r="5" fill="%23f8e0e9"/><circle cx="60" cy="25" r="7" fill="%23f8e0e9"/></svg>');
-        }
-        
-        .top-right {
-            top: 0;
-            right: 0;
-            transform: scaleX(-1);
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M30,20 Q40,5 50,20 T70,20" fill="none" stroke="%23c46bae" stroke-width="1"/><circle cx="20" cy="30" r="8" fill="%23f8e0e9"/><circle cx="40" cy="15" r="5" fill="%23f8e0e9"/><circle cx="60" cy="25" r="7" fill="%23f8e0e9"/></svg>');
-        }
-        
-        .bottom-left {
-            bottom: 0;
-            left: 0;
-            transform: scaleY(-1);
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M30,20 Q40,5 50,20 T70,20" fill="none" stroke="%23c46bae" stroke-width="1"/><circle cx="20" cy="30" r="8" fill="%23f8e0e9"/><circle cx="40" cy="15" r="5" fill="%23f8e0e9"/><circle cx="60" cy="25" r="7" fill="%23f8e0e9"/></svg>');
-        }
-        
-        .bottom-right {
-            bottom: 0;
-            right: 0;
-            transform: scale(-1);
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M30,20 Q40,5 50,20 T70,20" fill="none" stroke="%23c46bae" stroke-width="1"/><circle cx="20" cy="30" r="8" fill="%23f8e0e9"/><circle cx="40" cy="15" r="5" fill="%23f8e0e9"/><circle cx="60" cy="25" r="7" fill="%23f8e0e9"/></svg>');
-        }
-        
-        /* Couple Section */
-        .couple-section {
-            padding: 80px 0;
-            position: relative;
-            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="5" fill="%23f8e0e940"/><circle cx="80" cy="30" r="3" fill="%23f8e0e940"/><circle cx="40" cy="70" r="4" fill="%23f8e0e940"/><circle cx="70" cy="80" r="6" fill="%23f8e0e940"/></svg>');
-            background-size: 300px;
-        }
-        
-        .section-title {
-            text-align: center;
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 2.8rem;
-            margin-bottom: 50px;
-            color: #c46bae;
-            position: relative;
-        }
-        
-        .section-title::after {
-            content: "";
-            display: block;
-            width: 100px;
-            height: 3px;
-            background: linear-gradient(to right, transparent, #c46bae, transparent);
-            margin: 15px auto;
-        }
-        
-        .couple-container {
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 40px;
-        }
-        
-        .bride, .groom {
-            text-align: center;
-            max-width: 300px;
-        }
-        
-        .photo-frame {
-            position: relative;
-            width: 200px;
-            height: 200px;
-            margin: 0 auto 20px;
-            border-radius: 50%;
-            overflow: hidden;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-            border: 5px solid white;
-        }
-        
-        .photo-frame img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        
-        .frame-decoration {
-            position: absolute;
-            top: -10px;
-            left: -10px;
-            right: -10px;
-            bottom: -10px;
-            border: 2px solid #f8e0e9;
-            border-radius: 50%;
-            pointer-events: none;
-        }
-        
-        .heart-connector {
-            font-size: 2.5rem;
-            color: #c46bae;
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-        }
-        
-        .floral-divider {
-            height: 100px;
-            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 20"><path d="M0,10 C30,0 70,0 100,10 L100,20 L0,20 Z" fill="%23f8e0e9"/><circle cx="20" cy="5" r="3" fill="%23c46bae"/><circle cx="50" cy="8" r="2" fill="%23c46bae"/><circle cx="80" cy="5" r="3" fill="%23c46bae"/></svg>');
-            background-size: 100% 100%;
-            margin: 40px 0;
-        }
-        
-        /* Location Section */
-        .location-section {
-            padding: 80px 0;
+        /* Estilos para a nova seção de presentes */
+        .fun-gifts-section {
+            padding: 60px 0;
             background: linear-gradient(135deg, #fffaf0 0%, #ffefd6 100%);
         }
         
-        .location-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+        .gifts-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
         }
         
-        .location-info {
-            text-align: center;
-            max-width: 600px;
+        .category-filter {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .filter-btn {
+            padding: 10px 20px;
+            background-color: #f8e0e9;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            font-family: 'Montserrat', sans-serif;
+        }
+        
+        .filter-btn:hover, .filter-btn.active {
+            background-color: #c46bae;
+            color: white;
+        }
+        
+        .fun-gifts-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+        
+        .gift-category {
             margin-bottom: 40px;
         }
         
-        .location-info h3 {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 2rem;
-            margin-bottom: 20px;
-            color: #7a3b6a;
-        }
-        
-        .location-info p {
-            margin-bottom: 10px;
-            font-size: 1.1rem;
-        }
-        
-        .location-info i {
+        .category-title {
+            font-size: 1.8rem;
+            margin: 30px 0 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px dashed #c46bae;
             color: #c46bae;
-            width: 20px;
-            margin-right: 10px;
+            font-family: 'Cormorant Garamond', serif;
         }
         
-        /* Mapa Ampliado */
-        .map-container {
-            width: 100%;
-            max-width: 900px;
-            margin: 30px auto;
+        .gift-card {
+            background: white;
             border-radius: 15px;
             overflow: hidden;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
-            border: 5px solid white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+            height: 100%;
         }
         
-        .map-container iframe {
+        .gift-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .gift-image {
             width: 100%;
-            height: 500px;
-            display: block;
+            height: 180px;
+            background-color: #f8e0e9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
         }
         
-        /* Dress Code Section */
+        .gift-details {
+            padding: 20px;
+        }
+        
+        .gift-title {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: #5a3e36;
+            font-family: 'Cormorant Garamond', serif;
+        }
+        
+        .gift-price {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #c46bae;
+            margin: 15px 0;
+        }
+        
+        .gift-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: #c46bae;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+            font-family: 'Montserrat', sans-serif;
+        }
+        
+        .gift-btn:hover {
+            background-color: #a54c8c;
+        }
+        
+        /* Estilos para o mapa maior */
+        .map-container iframe {
+            height: 500px; /* Aumentado de 250px para 500px (2x maior) */
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+        
+        /* Estilos para as flores na seção de vestimenta */
         .dresscode-section {
-            padding: 80px 0;
             position: relative;
             overflow: hidden;
-            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="10" cy="10" r="4" fill="%23f8e0e940"/><circle cx="90" cy="20" r="3" fill="%23f8e0e940"/><circle cx="30" cy="80" r="5" fill="%23f8e0e940"/><circle cx="70" cy="90" r="2" fill="%23f8e0e940"/></svg>');
-            background-size: 300px;
         }
         
         .floral-side {
             position: absolute;
-            width: 200px;
+            width: 180px;
             height: 100%;
             top: 0;
             z-index: 0;
-            opacity: 0.5;
+            opacity: 0.4;
         }
         
         .floral-left {
@@ -288,113 +158,13 @@
         }
         
         .dresscode-content {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
             position: relative;
             z-index: 1;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 30px;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
         }
         
-        .dresscode-icon {
-            font-size: 3rem;
-            color: #c46bae;
-            margin-bottom: 20px;
-        }
-        
-        .dresscode-info {
-            text-align: center;
-        }
-        
-        .dresscode-info h3 {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 1.8rem;
-            margin-bottom: 15px;
-            color: #7a3b6a;
-        }
-        
-        .dresscode-info p {
-            margin-bottom: 10px;
-        }
-        
-        /* Footer */
-        footer {
-            background: linear-gradient(135deg, #7a3b6a 0%, #5a3e36 100%);
-            color: white;
-            padding: 40px 0;
-            text-align: center;
-        }
-        
-        .footer-content {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
-        }
-        
-        .footer-text h3 {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 2rem;
-            margin-bottom: 10px;
-        }
-        
-        .whatsapp-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 25px;
-            background-color: #25D366;
-            color: white;
-            text-decoration: none;
-            border-radius: 25px;
-            font-weight: 500;
-            transition: background-color 0.3s ease;
-        }
-        
-        .whatsapp-btn:hover {
-            background-color: #128C7E;
-        }
-        
-        /* Floating WhatsApp Button */
-        .float-whatsapp {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 60px;
-            height: 60px;
-            background-color: #25D366;
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 1.5rem;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-            z-index: 999;
-            transition: background-color 0.3s ease;
-        }
-        
-        .float-whatsapp:hover {
-            background-color: #128C7E;
-        }
-        
-        /* Responsividade */
         @media (max-width: 768px) {
-            .hero h1 {
-                font-size: 2.5rem;
-            }
-            
-            .subtitle {
-                font-size: 1.4rem;
-            }
-            
-            .couple-container {
-                flex-direction: column;
+            .fun-gifts-container {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
             }
             
             .floral-side {
@@ -409,6 +179,14 @@
     </style>
 </head>
 <body>
+    <!-- Loading Screen -->
+    <div class="loading-screen">
+        <div class="ring"></div>
+        <div class="ring"></div>
+        <div class="ring"></div>
+        <p>Carregando nosso amor...</p>
+    </div>
+
     <!-- Hero Section -->
     <section class="hero" id="home">
         <div class="hero-content">
@@ -416,6 +194,9 @@
             <!-- Data alterada para 08/08/2026 -->
             <p class="subtitle animate-text">08 • 08 • 2026</p>
             <p class="quote animate-text">"O amor nos trouxe até aqui. Um dia especial para selar nossa história e contar com a sua presença."</p>
+            <div class="scroll-indicator">
+                <span></span>
+            </div>
         </div>
         <div class="floral-decoration top-left"></div>
         <div class="floral-decoration top-right"></div>
@@ -430,7 +211,7 @@
             <div class="couple-container">
                 <div class="bride">
                     <div class="photo-frame">
-                        <div style="width:100%;height:100%;background-color:#f8e0e9;display:flex;justify-content:center;align-items:center;font-size:3rem;">👰</div>
+                        <img src="{{ url_for('static', filename='images/Foto1.jpg') }}" alt="Angellica Passos Delle">
                         <div class="frame-decoration"></div>
                     </div>
                     <h3>Angellica Passos Delle</h3>
@@ -441,7 +222,7 @@
                 </div>
                 <div class="groom">
                     <div class="photo-frame">
-                        <div style="width:100%;height:100%;background-color:#f8e0e9;display:flex;justify-content:center;align-items:center;font-size:3rem;">🤵</div>
+                        <img src="{{ url_for('static', filename='images/Foto2.jpg') }}" alt="Victor Macioski">
                         <div class="frame-decoration"></div>
                     </div>
                     <h3>Victor Macioski</h3>
@@ -462,10 +243,10 @@
                     <!-- Data alterada para 08/08/2026 -->
                     <p><i class="fas fa-calendar-alt"></i> 08 de Agosto de 2026 às 16h</p>
                     <p><i class="fas fa-map-marker-alt"></i> R. Aleixo Nodari, nº - Imbuial, Colombo - PR, 83415-250</p>
-                </div>
-                <!-- Mapa Ampliado -->
-                <div class="map-container">
-                    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3601.588399924028!2d-49.22462392433548!3d-25.48120163331425!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94dce5df5c904b13%3A0x7cb5c14d8e166e48!2sR.%20Aleixo%20Nodari%20-%20Imbuial%2C%20Colombo%20-%20PR%2C%2083415-250!5e0!3m2!1spt-BR!2sbr!4v1719500000000!5m2!1spt-BR!2sbr" width="100%" height="500" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+                    <div class="map-container">
+                        <!-- Mapa aumentado (3x maior) -->
+                        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3601.588399924028!2d-49.22462392433548!3d-25.48120163331425!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94dce5df5c904b13%3A0x7cb5c14d8e166e48!2sR.%20Aleixo%20Nodari%20-%20Imbuial%2C%20Colombo%20-%20PR%2C%2083415-250!5e0!3m2!1spt-BR!2sbr!4v1719500000000!5m2!1spt-BR!2sbr" width="100%" height="500" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+                    </div>
                 </div>
             </div>
         </div>
@@ -491,6 +272,370 @@
         <div class="floral-divider"></div>
     </section>
 
+    <!-- Gifts Section - Versão Engraçada -->
+    <section class="fun-gifts-section" id="presentes">
+        <div class="container">
+            <div class="gifts-header">
+                <h2 class="section-title">Lista de Presentes Engraçados</h2>
+                <p class="gifts-intro">Sua presença em nosso casamento já é o maior presente, mas se desejar nos presentear com algo divertido, ficaremos muito gratos!</p>
+                
+                <div class="category-filter">
+                    <button class="filter-btn active" data-category="all">Todos</button>
+                    <button class="filter-btn" data-category="cozinha">Cozinha</button>
+                    <button class="filter-btn" data-category="casa">Casa</button>
+                    <button class="filter-btn" data-category="lua-de-mel">Lua de Mel</button>
+                    <button class="filter-btn" data-category="hilarias">Hilárias</button>
+                    <button class="filter-btn" data-category="momentos-dois">Momento a Dois</button>
+                    <button class="filter-btn" data-category="personalizadas">Personalizadas</button>
+                </div>
+            </div>
+            
+            <div class="fun-gifts-container">
+                <!-- Cozinha -->
+                <div class="gift-category">
+                    <h2 class="category-title">🍳 Para a Cozinha</h2>
+                    <div class="fun-gifts-container">
+                        <div class="gift-card" data-category="cozinha">
+                            <div class="gift-image">🍳</div>
+                            <div class="gift-details">
+                                <h3 class="gift-title">Kit sobrevivência do café da manhã</h3>
+                                <p class="gift-price">R$ 500,00</p>
+                                <button class="gift-btn">Presentear</button>
+                            </div>
+                        </div>
+                        
+                        <div class="gift-card" data-category="cozinha">
+                            <div class="gift-image">🍲</div>
+                            <div class="gift-details">
+                                <h3 class="gift-title">Panela anti-queimadura (porque ela cozinha, eu queimo)</h3>
+                                <p class="gift-price">R$ 120,00</p>
+                                <button class="gift-btn">Presentear</button>
+                            </div>
+                        </div>
+                        
+                        <div class="gift-card" data-category="cozinha">
+                            <div class="gift-image">🥤</div>
+                            <div class="gift-details">
+                                <h3 class="gift-title">Liquidificador à prova de barulho (para smoothies às 6h)</h3>
+                                <p class="gift-price">R$ 200,00</p>
+                                <button class="gift-btn">Presentear</button>
+                            </div>
+                        </div>
+                        
+                        <div class="gift-card" data-category="cozinha">
+                            <div class="gift-image">🔪</div>
+                            <div class="gift-details">
+                                <h3 class="gift-title">Conjunto de facas 'não me corte fora'</h3>
+                                <p class="gift-price">R$ 180,00</p>
+                                <button class="gift-btn">Presentear</button>
+                            </div>
+                        </div>
+                        
+                        <div class="gift-card" data-category="cozinha">
+                            <div class="gift-image">🍟</div>
+                            <div class="gift-details">
+                                <h3 class="gift-title">Airfryer mágica (transforma salsicha em jantar gourmet)</h3>
+                                <p class="gift-price">R$ 300,00</p>
+                                <button class="gift-btn">Presentear</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Casa -->
+                <div class="gift-category">
+                    <h2 class="category-title">🛋️ Para a Casa</h2>
+                    <div class="fun-gifts-container">
+                        <div class="gift-card" data-category="casa">
+                            <div class="gift-image">🛏️</div>
+                            <div class="gift-details">
+                                <h3 class="gift-title">Edredom à prova de puxões (para guerra de cobertor)</h3>
+                                <p class="gift-price">R$ 250,00</p>
+                                <button class="gift-btn">Presentear</button>
+                            </div>
+                        </div>
+                        
+                        <div class="gift-card" data-category="casa">
+                            <div class="gift-image">🛌</div>
+                            <div class="gift-details">
+                                <h3 class="gift-title">Travesseiro com divisória (cada um do seu lado)</h3>
+                                <p class="gift-price">R$ 150,00</p>
+                                <button class="gift-btn">Presentear</button>
+                            </div>
+                        </div>
+                        
+                        <div class="gift-card" data-category="casa">
+                            <div class="gift-image">🎲</div>
+                            <div class="gift-details">
+                                <h3 class="gift-title">Kit 'quem lava a louça hoje?' (dado decisório)</h3>
+                                <p class="gift-price">R$ 800,00</p>
+                                <button class="gift-btn">Presentear</button>
+                            </div>
+                        </div>
+                        
+                        <div class="gift-card" data-category="casa">
+                            <div class="gift-image">🧺</div>
+                            <div class="gift-details">
+                                <h3 class="gift-title">Cesta de piquenique para brigar no parque</h3>
+                                <p class="gift-price">R$ 120,00</p>
+                                <button class="gift-btn">Presentear</button>
+                            </div>
+                        </div>
+                        
+                        <div class="gift-card" data-category="casa">
+                            <div class="gift-image">💡</div>
+                            <div class="gift-details">
+                                <h3 class="gift-title">Abajur com luz noturna 'não acorda o outro'</h3>
+                                <p class="gift-price">R$ 1000,00</p>
+                                <button class="gift-btn">Presentear</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Lua de Mel -->
+                <div class="gift-category">
+                    <h2 class="category-title">✈️ Para a Lua de Mel</h2>
+                    <div class="fun-gifts-container">
+                        <div class="gift-card" data-category="lua-de-mel">
+                            <div class="gift-image">✈️</div>
+                            <div class="gift-details">
+                                <h3 class="gift-title">Kit sobrevivência em voo (protetor auricular + máscara)</h3>
+                                <p class="gift-price">R$ 600,00</p>
+                                <button class="gift-btn">Presentear</button>
+                            </div>
+                        </div>
+                        
+                        <div class="gift-card" data-category="lua-de-mel">
+                            <div class="gift-image">🗺️</div>
+                            <div class="gift-details">
+                                <h3 class="gift-title">Guia 'como não se perder em país estrangeiro'</h3>
+                                <p class="gift-price">R$ 910,00</p>
+                                <button class="gift-btn">Presentear</button>
+                            </div>
+                        </div>
+                        
+                        <div class="gift-card" data-category="lua-de-mel">
+                            <div class="gift-image">💰</div>
+                            <div class="gift-details">
+                                <h3 class="gift-title">Dinheiro para resgate em caso de separação no museu</h3>
+                                <p class="gift-price">R$ 200,00</p>
+                                <button class="gift-btn">Presentear</button>
+                            </div>
+                        </div>
+                        
+                        <div class="gift-card" data-category="lua-de-mel">
+                            <div class="gift-image">🧳</div>
+                            <div class="gift-details">
+                                <h3 class="gift-title">Seguro extra para bagagem (ela leva a casa toda)</h3>
+                                <p class="gift-price">R$ 1500,00</p>
+                                <button class="gift-btn">Presentear</button>
+                            </div>
+                        </div>
+                        
+                        <div class="gift-card" data-category="lua-de-mel">
+                            <div class="gift-image">🍝</div>
+                            <div class="gift-details">
+                                <h3 class="gift-title">Fundos para comida de verdade (não só foto no Instagram)</h3>
+                                <p class="gift-price">R$ 250,00</p>
+                                <button class="gift-btn">Presentear</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Opções Hilárias -->
+                <div class="gift-category">
+                    <h2 class="category-title">😂 Opções Hilárias</h2>
+                    <div class="fun-gifts-container">
+                        <div class="gift-card" data-category="hilarias">
+                            <div class="gift-image">🎫</div>
+                            <div class="gift-details">
+                                <h3 class="gift-title">Vale 'eu tinha razão' (válido por 1 discussão)</h3>
+                                <p class="gift-price">R$ 300,00</p>
+                                <button class="gift-btn">Presentear</button>
+                            </div>
+                        </div>
+                        
+                        <div class="gift-card" data-category="hilarias">
+                            <div class="gift-image">☕</div>
+                            <div class="gift-details">
+                                <h3 class="gift-title">Café premium para aguentar sogra</h3>
+                                <p class="gift-price">R$ 450,00</p>
+                                <button class="gift-btn">Presentear</button>
+                            </div>
+                        </div>
+                        
+                        <div class="gift-card" data-category="hilarias">
+                            <div class="gift-image">🩹</div>
+                            <div class="gift-details">
+                                <h3 class="gift-title">Kit primeiros socorros para DIY que deu errado</h3>
+                                <p class="gift-price">R$ 120,00</p>
+                                <button class="gift-btn">Presentear</button>
+                            </div>
+                        </div>
+                        
+                        <div class="gift-card" data-category="hilarias">
+                            <div class="gift-image">📺</div>
+                            <div class="gift-details">
+                                <h3 class="gift-title">Assinatura de streaming para noites de 'não quero sair'</h3>
+                                <p class="gift-price">R$ 200,00</p>
+                                <button class="gift-btn">Presentear</button>
+                            </div>
+                        </div>
+                        
+                        <div class="gift-card" data-category="hilarias">
+                            <div class="gift-image">🧽</div>
+                            <div class="gift-details">
+                                <h3 class="gift-title">Vale 'eu lavo a louça' (válido por 30 dias)</h3>
+                                <p class="gift-price">R$ 100,00</p>
+                                <button class="gift-btn">Presentear</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Para os Momentos a Dois -->
+                <div class="gift-category">
+                    <h2 class="category-title">🍷 Para os Momentos a Dois</h2>
+                    <div class="fun-gifts-container">
+                        <div class="gift-card" data-category="momentos-dois">
+                            <div class="gift-image">🍷</div>
+                            <div class="gift-details">
+                                <h3 class="gift-title">Vinho para comemorar as pazes</h3>
+                                <p class="gift-price">R$ 350,00</p>
+                                <button class="gift-btn">Presentear</button>
+                            </div>
+                        </div>
+                        
+                        <div class="gift-card" data-category="momentos-dois">
+                            <div class="gift-image">🧀</div>
+                            <div class="gift-details">
+                                <h3 class="gift-title">Queijo para acompanhar as reconciliações</h3>
+                                <p class="gift-price">R$ 600,00</p>
+                                <button class="gift-btn">Presentear</button>
+                            </div>
+                        </div>
+                        
+                        <div class="gift-card" data-category="momentos-dois">
+                            <div class="gift-image">🍫</div>
+                            <div class="gift-details">
+                                <h3 class="gift-title">Kit fondue para noites românticas (ou preguiçosas)</h3>
+                                <p class="gift-price">R$ 150,00</p>
+                                <button class="gift-btn">Presentear</button>
+                            </div>
+                        </div>
+                        
+                        <div class="gift-card" data-category="momentos-dois">
+                            <div class="gift-image">🥂</div>
+                            <div class="gift-details">
+                                <h3 class="gift-title">Taças de champagne 'sobrevivemos à família'</h3>
+                                <p class="gift-price">R$ 120,00</p>
+                                <button class="gift-btn">Presentear</button>
+                            </div>
+                        </div>
+                        
+                        <div class="gift-card" data-category="momentos-dois">
+                            <div class="gift-image">🎲</div>
+                            <div class="gift-details">
+                                <h3 class="gift-title">Jogo de tabuleiro para decidir quem leva o lixo</h3>
+                                <p class="gift-price">R$ 220,00</p>
+                                <button class="gift-btn">Presentear</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Opções Personalizadas -->
+                <div class="gift-category">
+                    <h2 class="category-title">🎯 Opções Personalizadas</h2>
+                    <div class="fun-gifts-container">
+                        <div class="gift-card" data-category="personalizadas">
+                            <div class="gift-image">💃</div>
+                            <div class="gift-details">
+                                <h3 class="gift-title">Aula de dança para não pisar no vestido no civil</h3>
+                                <p class="gift-price">R$ 180,00</p>
+                                <button class="gift-btn">Presentear</button>
+                            </div>
+                        </div>
+                        
+                        <div class="gift-card" data-category="personalizadas">
+                            <div class="gift-image">📸</div>
+                            <div class="gift-details">
+                                <h3 class="gift-title">Fotógrafo para provar que eu ajudo nas tarefas</h3>
+                                <p class="gift-price">R$ 300,00</p>
+                                <button class="gift-btn">Presentear</button>
+                            </div>
+                        </div>
+                        
+                        <div class="gift-card" data-category="personalizadas">
+                            <div class="gift-image">👨‍🍳</div>
+                            <div class="gift-details">
+                                <h3 class="gift-title">Curso de culinária 'não viveremos de delivery'</h3>
+                                <p class="gift-price">R$ 220,00</p>
+                                <button class="gift-btn">Presentear</button>
+                            </div>
+                        </div>
+                        
+                        <div class="gift-card" data-category="personalizadas">
+                            <div class="gift-image">🛋️</div>
+                            <div class="gift-details">
+                                <h3 class="gift-title">Terapia de casal preventiva</h3>
+                                <p class="gift-price">R$ 350,00</p>
+                                <button class="gift-btn">Presentear</button>
+                            </div>
+                        </div>
+                        
+                        <div class="gift-card" data-category="personalizadas">
+                            <div class="gift-image">🏨</div>
+                            <div class="gift-details">
+                                <h3 class="gift-title">Noite no hotel para fugir da visita dos parentes</h3>
+                                <p class="gift-price">R$ 280,00</p>
+                                <button class="gift-btn">Presentear</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- RSVP Section -->
+    <section class="rsvp-section" id="confirmacao">
+        <div class="container">
+            <h2 class="section-title">Confirmação de Presença</h2>
+            <div class="rsvp-container">
+                <p>Por favor, confirme sua presença até 30 de Novembro de 2026</p>
+                <form class="rsvp-form">
+                    <div class="form-group">
+                        <input type="text" placeholder="Seu nome completo" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="email" placeholder="Seu e-mail" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="tel" placeholder="Seu telefone" required>
+                    </div>
+                    <div class="form-group">
+                        <select required>
+                            <option value="" disabled selected>Quantidade de pessoas</option>
+                            <option value="1">1 pessoa</option>
+                            <option value="2">2 pessoas</option>
+                            <option value="3">3 pessoas</option>
+                            <option value="4">4 pessoas</option>
+                            <option value="5">5 ou mais pessoas</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <textarea placeholder="Alguma observação ou restrição alimentar?" rows="3"></textarea>
+                    </div>
+                    <button type="submit" class="submit-btn">Confirmar Presença</button>
+                </form>
+            </div>
+        </div>
+        <div class="floral-divider"></div>
+    </section>
+
     <!-- Footer -->
     <footer>
         <div class="container">
@@ -509,9 +654,62 @@
         </div>
     </footer>
 
+    <!-- PIX Modal -->
+    <div class="modal" id="pixModal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Presentear via PIX</h2>
+            <p>Utilize a chave PIX abaixo para nos presentear:</p>
+            <div class="pix-info">
+                <p class="pix-key">41999445586</p>
+                <button class="copy-pix">Copiar Chave PIX</button>
+            </div>
+            <p class="modal-footer">Agradecemos imensamente pelo seu presente!</p>
+        </div>
+    </div>
+
     <!-- Floating WhatsApp Button -->
     <a href="https://wa.me/5541999445586?text=Olá! Gostaria de mais informações sobre o casamento." class="float-whatsapp" target="_blank">
         <i class="fab fa-whatsapp"></i>
     </a>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>
+        // Filtro de categorias para a lista de presentes engraçada
+        document.querySelectorAll('.filter-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                // Remove a classe active de todos os botões
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                
+                // Adiciona a classe active ao botão clicado
+                button.classList.add('active');
+                
+                const category = button.getAttribute('data-category');
+                
+                // Mostra/oculta os presentes conforme a categoria selecionada
+                document.querySelectorAll('.gift-card').forEach(card => {
+                    if (category === 'all') {
+                        card.style.display = 'block';
+                    } else {
+                        if (card.getAttribute('data-category') === category) {
+                            card.style.display = 'block';
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    }
+                });
+            });
+        });
+        
+        // Simulação de clique no botão de presentear
+        document.querySelectorAll('.gift-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                const giftTitle = button.parentElement.querySelector('.gift-title').textContent;
+                alert(`Obrigado por escolher presentear com: ${giftTitle}! Em breve entraremos em contato.`);
+            });
+        });
+    </script>
 </body>
 </html>
