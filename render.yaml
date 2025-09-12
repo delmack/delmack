@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: seu-servidor
+    env: node
+    buildCommand: npm install --prefer-offline --no-audit
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
