@@ -5,20 +5,25 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "build": "npm install --prefer-offline --no-audit"
+    "dev": "nodemon server.js",
+    "build": "npm install"
   },
   "keywords": [
     "node",
     "express",
-    "render"
+    "render",
+    "server"
   ],
   "author": "Seu Nome",
   "license": "MIT",
   "engines": {
-    "node": "18.x",
-    "npm": "8.x"
+    "node": "20.x",
+    "npm": "10.x"
   },
   "dependencies": {
     "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
   }
 }
