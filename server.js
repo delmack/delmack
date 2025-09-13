@@ -1,41 +1,37 @@
 const express = require("express");
+const cors = require("cors");
+const path = require("path");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+require("dotenv").config();
+
+// Importar rotas
+const authRoutes = require("./routes/auth");
+const salesRoutes = require("./routes/sales");
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware para logging de requisições
-app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
-  next();
-});
+// Middleware
+app.use(cors());
+app.use(express.json());
+app.use(express.static("public"));
 
-// Rota principal
+// Rotas da API
+app.use("/api/auth", authRoutes);
+app.use("/api/sales", salesRoutes);
+
+// Rota principal - servir o frontend
 app.get("/", (req, res) => {
-  res.json({
-    message: "Olá! Servidor funcionando no Render!",
-    timestamp: new Date().toISOString(),
-    status: "OK",
-  });
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// Rota de saúde para verificar se o servidor está online
+// Rota de saúde para o Render
 app.get("/health", (req, res) => {
-  res.status(200).json({ status: "Servidor operacional" });
+  res.status(200).json({ status: "OK", message: "Servidor está funcionando" });
 });
 
-// Rota de exemplo com parâmetro
-app.get("/user/:name", (req, res) => {
-  const { name } = req.params;
-  res.json({
-    message: `Olá, ${name}! Bem-vindo ao servidor Node.js.`,
-    user: name,
-  });
-});
-
-// Iniciar o servidor
+// Iniciar servidor
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
-  console.log(`Acesse: http://localhost:${PORT}`);
 });
-
-// Exportar app para testes (se necessário)
-module.exports = app;

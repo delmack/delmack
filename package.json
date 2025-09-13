@@ -1,29 +1,29 @@
 {
-  "name": "servidor-render",
+  "name": "delmack-portal",
   "version": "1.0.0",
-  "description": "Servidor Node.js para deploy no Render",
+  "description": "Portal de Vendas Delmack Consultoria",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "build": "npm install"
-  },
-  "keywords": [
-    "node",
-    "express",
-    "render",
-    "server"
-  ],
-  "author": "Seu Nome",
-  "license": "MIT",
-  "engines": {
-    "node": "20.x",
-    "npm": "10.x"
+    "render-build": "echo 'Building for Render...'"
   },
   "dependencies": {
-    "express": "^4.18.2"
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.0",
+    "dotenv": "^16.0.3"
   },
-  "devDependencies": {
-    "nodemon": "^3.0.1"
-  }
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "keywords": [
+    "delmack",
+    "consultoria",
+    "vendas",
+    "portal"
+  ],
+  "author": "Delmack Consultoria",
+  "license": "MIT"
 }
