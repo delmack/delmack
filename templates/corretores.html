@@ -1,0 +1,95 @@
+{% extends "layout.html" %}
+
+{% block title %}Gestão de Corretores - Delmack{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="mt-4">Gestão de Corretores</h1>
+    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addCorretorModal">
+        <i class="fas fa-plus-circle me-2"></i>Adicionar Corretor
+    </button>
+</div>
+<p class="text-secondary">Gerencie os membros da sua equipe, acompanhe informações e status.</p>
+
+<div class="card">
+    <div class="card-header">
+        <i class="fas fa-users me-1"></i>
+        Equipe de Corretores
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Email</th>
+                        <th>CRECI</th>
+                        <th>Telefone</th>
+                        <th>Vendas (Mês)</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Ana Silva</td>
+                        <td>ana.silva@delmack.com</td>
+                        <td>12345-F</td>
+                        <td>(11) 98765-4321</td>
+                        <td>R$ 450.000,00</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Bruno Costa</td>
+                        <td>bruno.costa@delmack.com</td>
+                        <td>54321-F</td>
+                        <td>(21) 91234-5678</td>
+                        <td>R$ 800.000,00</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Carla Dias</td>
+                        <td>carla.dias@delmack.com</td>
+                        <td>67890-F</td>
+                        <td>(31) 95678-1234</td>
+                        <td>R$ 0,00</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Adicionar Corretor -->
+<div class="modal fade" id="addCorretorModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Cadastrar Novo Corretor</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form>
+          <div class="mb-3"><label class="form-label">Nome Completo</label><input type="text" class="form-control" required></div>
+          <div class="mb-3"><label class="form-label">Email</label><input type="email" class="form-control" required></div>
+          <div class="mb-3"><label class="form-label">CRECI</label><input type="text" class="form-control"></div>
+          <div class="mb-3"><label class="form-label">Telefone</label><input type="tel" class="form-control"></div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-success">Salvar Corretor</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

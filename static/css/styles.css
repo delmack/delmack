@@ -1,0 +1,126 @@
+/* static/css/styles.css */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap' );
+
+:root {
+    --bg-main: #111827; /* Fundo principal (quase preto) */
+    --bg-sidebar: #1F2937; /* Fundo do menu lateral */
+    --bg-card: #1F2937; /* Fundo dos cards e tabelas */
+    --border-color: #374151;
+    --text-primary: #F9FAFB;
+    --text-secondary: #9CA3AF;
+    --primary-accent: #3B82F6; /* Um azul mais vibrante */
+    --success-accent: #10B981;
+}
+
+body {
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+}
+
+#wrapper {
+    overflow-x: hidden;
+}
+
+/* --- Menu Lateral --- */
+#sidebar-wrapper {
+    background-color: var(--bg-sidebar);
+    min-height: 100vh;
+    margin-left: -16rem;
+    transition: margin .25s ease-out;
+    border-right: 1px solid var(--border-color);
+}
+
+#sidebar-wrapper .sidebar-heading {
+    padding: 1rem 1.25rem;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+#sidebar-wrapper .list-group {
+    width: 16rem;
+}
+
+#sidebar-wrapper .list-group-item {
+    background-color: var(--bg-sidebar);
+    color: var(--text-secondary);
+    border: none;
+    padding: 0.9rem 1.25rem;
+    font-weight: 500;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+#sidebar-wrapper .list-group-item:hover,
+#sidebar-wrapper .list-group-item.active {
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    border-left: 4px solid var(--primary-accent);
+    padding-left: calc(1.25rem - 4px);
+}
+
+/* --- Conteúdo da Página --- */
+#page-content-wrapper {
+    min-width: 100vw;
+}
+
+#wrapper.toggled #sidebar-wrapper {
+    margin-left: 0;
+}
+
+/* --- Navbar Superior --- */
+.navbar {
+    background-color: var(--bg-card) !important;
+    border-bottom: 1px solid var(--border-color) !important;
+}
+
+/* --- Cards e Componentes --- */
+.card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
+
+.card-header {
+    background-color: rgba(0,0,0,0.2);
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* --- Tabelas --- */
+.table {
+    --bs-table-bg: var(--bg-card);
+    --bs-table-striped-bg: var(--bg-main);
+    --bs-table-color: var(--text-primary);
+    --bs-table-border-color: var(--border-color);
+}
+
+/* --- Modals --- */
+.modal-content {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+}
+.btn-close-white {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+/* --- Botões --- */
+.btn-primary {
+    background-color: var(--primary-accent);
+    border-color: var(--primary-accent);
+}
+.btn-success {
+    background-color: var(--success-accent);
+    border-color: var(--success-accent);
+}
+
+@media (min-width: 768px) {
+    #sidebar-wrapper { margin-left: 0; }
+    #page-content-wrapper { min-width: 0; width: 100%; }
+    #wrapper.toggled #sidebar-wrapper { margin-left: -16rem; }
+}

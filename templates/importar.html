@@ -1,0 +1,38 @@
+{% extends "layout.html" %}
+
+{% block title %}Importar Dados - Delmack{% endblock %}
+
+{% block content %}
+<h1 class="mt-4">Importar Dados via Planilha</h1>
+<p class="text-secondary">Carregue dados em massa de vendas, corretores ou imóveis usando arquivos Excel (.xlsx).</p>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header"><i class="fas fa-upload me-1"></i>Upload de Arquivo</div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label class="form-label">1. Selecione o tipo de dado:</label>
+                        <select class="form-select mb-3"><option selected>Novas Vendas</option><option>Atualização de Corretores</option></select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">2. Escolha o arquivo Excel (.xlsx):</label>
+                        <input class="form-control" type="file" name="file" accept=".xlsx" required>
+                    </div>
+                    <button type="submit" class="btn btn-success mt-3"><i class="fas fa-check-circle me-2"></i>Iniciar Importação</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header"><i class="fas fa-info-circle me-1"></i>Instruções</div>
+            <div class="card-body">
+                <p class="small">Para garantir uma importação bem-sucedida, sua planilha deve seguir o modelo padrão.</p>
+                <a href="#" class="btn btn-sm btn-outline-primary"><i class="fas fa-download me-2"></i>Baixar Modelo</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends "layout.html" %}
+
+{% block title %}Gestão de Imóveis - Delmack{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="mt-4">Gestão de Imóveis</h1>
+    <button class="btn btn-success"><i class="fas fa-plus-circle me-2"></i>Nova Angariação</button>
+</div>
+<p class="text-secondary">Visualize e gerencie todos os imóveis da carteira.</p>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form class="row g-3 align-items-end">
+            <div class="col-md-5"><label class="form-label">Buscar por Código ou Título</label><input type="text" class="form-control" placeholder="Ex: AP001..."></div>
+            <div class="col-md-3"><label class="form-label">Status</label><select class="form-select"><option selected>Todos</option><option>Ativo</option><option>Vendido</option></select></div>
+            <div class="col-md-2"><label class="form-label">Corretor</label><select class="form-select"><option selected>Todos</option><option>Ana Silva</option></select></div>
+            <div class="col-md-2"><button type="submit" class="btn btn-primary w-100">Filtrar</button></div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header"><i class="fas fa-building me-1"></i>Imóveis Cadastrados</div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead><tr><th>Código</th><th>Título</th><th>Status</th><th>Corretor</th><th>Proprietário</th><th>Ações</th></tr></thead>
+                <tbody>
+                    <tr><td>AP001</td><td>Apartamento Moderno no Itaim Bibi</td><td><span class="badge bg-success">Ativo</span></td><td>Ana Silva</td><td>Proprietário João</td><td><button class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></button></td></tr>
+                    <tr><td>CA002</td><td>Casa com Piscina na Barra da Tijuca</td><td><span class="badge bg-success">Ativo</span></td><td>Bruno Costa</td><td>Proprietária Maria</td><td><button class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></button></td></tr>
+                    <tr><td>AP003</td><td>Cobertura Duplex em Moema</td><td><span class="badge bg-danger">Vendido</span></td><td>Ana Silva</td><td>Proprietário João</td><td><button class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></button></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

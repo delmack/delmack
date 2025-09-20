@@ -1,0 +1,55 @@
+{% extends "layout.html" %}
+
+{% block title %}Metas da Equipe - Delmack{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="mt-4">Metas e Desempenho</h1>
+    <button class="btn btn-primary"><i class="fas fa-edit me-2"></i>Definir Novas Metas</button>
+</div>
+<p class="text-secondary">Acompanhe o progresso da equipe em relação às metas mensais.</p>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title text-secondary">Meta de Vendas (Mês)</h5>
+                <h3 class="fw-bold">R$ 2.000.000,00</h3>
+                <p class="text-secondary mb-2">Progresso: R$ 1.250.000,00</p>
+                <div class="progress" style="height: 20px;"><div class="progress-bar bg-success" style="width: 62.5%;">62.5%</div></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title text-secondary">Meta de Angariações (Mês)</h5>
+                <h3 class="fw-bold">15 Imóveis</h3>
+                <p class="text-secondary mb-2">Progresso: 8 Imóveis</p>
+                <div class="progress" style="height: 20px;"><div class="progress-bar bg-info" style="width: 53%;">53%</div></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header"><i class="fas fa-bullseye me-1"></i>Progresso Individual</div>
+    <div class="card-body">
+        <div class="mb-4">
+            <h6>Ana Silva (Meta Vendas: R$ 600k | Meta Angariações: 5)</h6>
+            <p class="small text-secondary mb-1">Vendas: R$ 450.000,00</p>
+            <div class="progress mb-2"><div class="progress-bar" style="width: 75%;">75%</div></div>
+            <p class="small text-secondary mb-1">Angariações: 4</p>
+            <div class="progress"><div class="progress-bar bg-warning" style="width: 80%;">80%</div></div>
+        </div>
+        <hr class="border-secondary">
+        <div class="mb-4">
+            <h6>Bruno Costa (Meta Vendas: R$ 1M | Meta Angariações: 7)</h6>
+            <p class="small text-secondary mb-1">Vendas: R$ 800.000,00</p>
+            <div class="progress mb-2"><div class="progress-bar" style="width: 80%;">80%</div></div>
+            <p class="small text-secondary mb-1">Angariações: 3</p>
+            <div class="progress"><div class="progress-bar bg-warning" style="width: 43%;">43%</div></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
